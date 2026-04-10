@@ -131,6 +131,7 @@
         .neoenergia { background: linear-gradient(135deg, #0984e3 0%, #074b83 100%); color: white; border-left-color: #063970; }
         .equatorial { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); color: white; border-left-color: #8e44ad; }
         .cemig { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border-left-color: #d35400; }
+        .coelba { background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; border-left-color: #0e8a72; }
 
         .concessionaria-item {
             display: flex;
@@ -334,7 +335,8 @@
                         <option value="ENERGISA_PB">ENERGISA PB</option>
                         <option value="NEOENERGIA">Neoenergia (PE/COSEM/DF)</option>
                         <option value="EQUATORIAL">Equatorial AL/PI</option>
-                        <option value="CEMIG">CEMIG</option>
+                        <option value="CEMIG">CEMIG (MG)</option>
+                        <option value="COELBA">COELBA (BA)</option>
                     </select>
                 </div>
 
@@ -372,7 +374,25 @@
                 </select>
             </div>
 
-            <!-- Informação sobre carga necessária -->
+            <!-- Configuração específica para COELBA - Tipo de Rede -->
+            <div class="form-group" id="configRedeCoelbaGroup" style="display: none;">
+                <label for="configRedeCoelba">🔌 Tipo de Rede COELBA:</label>
+                <select id="configRedeCoelba">
+                    <option value="127_220">127/220V (Rede Monofásica/Bifásica/Trifásica padrão)</option>
+                    <option value="220_380">220/380V (Rede Trifásica 380V)</option>
+                </select>
+            </div>
+
+            <!-- Campo opcional: Carga Instalada Atual -->
+            <div class="form-group" id="cargaInstaladaGroup" style="display: none;">
+                <label for="cargaInstaladaInput">🏠 Carga Instalada Atual (kW) <span style="font-weight:400;color:#888;font-size:0.9em;">(opcional)</span>:</label>
+                <input type="number" id="cargaInstaladaInput" placeholder="Ex: 12.5" min="0" step="0.1">
+                <div class="info" style="margin-top:8px;padding:10px;font-size:0.9em;">
+                    💡 O dimensionamento usará o <strong>maior valor</strong> entre a Potência do Inversor e a Carga Instalada.
+                </div>
+            </div>
+
+
             <div class="info" id="cargaNecessariaInfo" style="display: none;">
                 <strong>💡 Informação sobre Carga Instalada:</strong> 
                 <span id="cargaNecessariaText"></span>
@@ -396,6 +416,14 @@
                 <div class="result-item">
                     <span class="result-label">🔋 Potência Total dos Inversores:</span>
                     <span class="result-value" id="potenciaTotal">-</span>
+                </div>
+                <div class="result-item" id="cargaInstaladaResultItem" style="display:none;">
+                    <span class="result-label">🏠 Carga Instalada Informada:</span>
+                    <span class="result-value" id="cargaInstaladaResult">-</span>
+                </div>
+                <div class="result-item" id="baseDimensionamentoItem" style="display:none;">
+                    <span class="result-label">📐 Base do Dimensionamento:</span>
+                    <span class="result-value highlight" id="baseDimensionamento">-</span>
                 </div>
                 <div class="result-item">
                     <span class="result-label">🔧 Disjuntor Principal:</span>
@@ -748,13 +776,47 @@
                 ]
             },
             "CEMIG": {
-                "MONOFASICO": [
-                    {min: 0, max: 10, classe: "M2/M3", pd: 8.2},
-                    {min: 10.1, max: 15, classe: "M3", pd: 13.8}
+                "BIFASICO": [
+                    {min: 0, max: 9.6, classe: "H1", pd: 9.6},
+                    {min: 9.7, max: 15.1, classe: "H2", pd: 15.1}
                 ],
                 "TRIFASICO": [
-                    {min: 0, max: 21, classe: "T6", pd: 21.0},
-                    {min: 21.1, max: 26, classe: "T7", pd: 26.0}
+                    {min: 0, max: 15, classe: "T1", pd: 15},
+                    {min: 15.1, max: 25, classe: "T2", pd: 25},
+                    {min: 25.1, max: 38, classe: "T3", pd: 38},
+                    {min: 38.1, max: 54, classe: "T4", pd: 54},
+                    {min: 54.1, max: 75, classe: "T5", pd: 75}
+                ]
+            },
+            "COELBA": {
+                "127_220_MONOFASICO": [
+                    {min: 0, max: 5, classe: "M0", pd: 5},
+                    {min: 5.1, max: 10, classe: "M1", pd: 10}
+                ],
+                "127_220_BIFASICO": [
+                    {min: 0, max: 11, classe: "B0", pd: 11},
+                    {min: 11.1, max: 18, classe: "B1", pd: 18}
+                ],
+                "127_220_TRIFASICO": [
+                    {min: 0, max: 19, classe: "T0", pd: 19},
+                    {min: 19.1, max: 24, classe: "T1", pd: 24},
+                    {min: 24.1, max: 38, classe: "T2", pd: 38},
+                    {min: 38.1, max: 47, classe: "T3", pd: 47},
+                    {min: 47.1, max: 57, classe: "T4", pd: 57},
+                    {min: 57.1, max: 75, classe: "T5", pd: 75}
+                ],
+                "220_380_MONOFASICO": [
+                    {min: 0, max: 10, classe: "M2", pd: 10},
+                    {min: 10.1, max: 15, classe: "M3", pd: 15}
+                ],
+                "220_380_TRIFASICO": [
+                    {min: 0, max: 21, classe: "T6", pd: 21},
+                    {min: 21.1, max: 26, classe: "T7", pd: 26},
+                    {min: 26.1, max: 33, classe: "T8", pd: 33},
+                    {min: 33.1, max: 40, classe: "T9", pd: 40},
+                    {min: 40.1, max: 52, classe: "T10", pd: 52},
+                    {min: 52.1, max: 66, classe: "T11", pd: 66},
+                    {min: 66.1, max: 75, classe: "T12", pd: 75}
                 ]
             }
         };
@@ -1002,36 +1064,214 @@
                 }
             },
             "CEMIG": {
-                "M2/M3": {
-                    "MONOFASICO": {
-                        disjuntor: "Consultar CEMIG",
-                        cabo: "Consultar CEMIG",
-                        ramal: "Consultar CEMIG",
-                        tipo: "Consultar CEMIG"
+                "H1": {
+                    "BIFASICO": {
+                        disjuntor: "40A BIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "2x10+10 CU XLPE",
+                        tipo: "CATEGORIA H1 - Bifásico 127/220V"
+                    }
+                },
+                "H2": {
+                    "BIFASICO": {
+                        disjuntor: "63A BIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "2x16+16 CU XLPE",
+                        tipo: "CATEGORIA H2 - Bifásico 127/220V"
+                    }
+                },
+                "T1": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "3x10+10 CU XLPE",
+                        tipo: "CATEGORIA T1 - Trifásico 127/220V"
+                    }
+                },
+                "T2": {
+                    "TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T2 - Trifásico 127/220V"
+                    }
+                },
+                "T3": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² - 1KV - XLPE",
+                        ramal: "3x35+35 CU XLPE",
+                        tipo: "CATEGORIA T3 - Trifásico 127/220V"
+                    }
+                },
+                "T4": {
+                    "TRIFASICO": {
+                        disjuntor: "150A TRIPOLAR CURVA C",
+                        cabo: "70mm² - 1KV - XLPE",
+                        ramal: "3x70+70 CU XLPE",
+                        tipo: "CATEGORIA T4 - Trifásico 127/220V"
+                    }
+                },
+                "T5": {
+                    "TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "95mm² - 1KV - XLPE",
+                        ramal: "3x95+95 CU XLPE",
+                        tipo: "CATEGORIA T5 - Trifásico 127/220V"
+                    }
+                }
+            },
+            "COELBA": {
+                "M0": {
+                    "127_220_MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico 10mm²",
+                        tipo: "CATEGORIA M0 - Monofásico 127/220V"
+                    }
+                },
+                "M1": {
+                    "127_220_MONOFASICO": {
+                        disjuntor: "63A MONOPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico 10mm²",
+                        tipo: "CATEGORIA M1 - Monofásico 127/220V"
+                    }
+                },
+                "B0": {
+                    "127_220_BIFASICO": {
+                        disjuntor: "50A BIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "2x10+10 CU XLPE",
+                        tipo: "CATEGORIA B0 - Bifásico 127/220V"
+                    }
+                },
+                "B1": {
+                    "127_220_BIFASICO": {
+                        disjuntor: "70A BIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "2x16+16 CU XLPE",
+                        tipo: "CATEGORIA B1 - Bifásico 127/220V"
+                    }
+                },
+                "T0": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "3x10+10 CU XLPE",
+                        tipo: "CATEGORIA T0 - Trifásico 127/220V"
+                    }
+                },
+                "T1": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T1 - Trifásico 127/220V"
+                    }
+                },
+                "T2": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² - 1KV - XLPE",
+                        ramal: "3x35+35 CU XLPE",
+                        tipo: "CATEGORIA T2 - Trifásico 127/220V"
+                    }
+                },
+                "T3": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "50mm² - 1KV - XLPE",
+                        ramal: "3x50+50 CU XLPE",
+                        tipo: "CATEGORIA T3 - Trifásico 127/220V"
+                    }
+                },
+                "T4": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "150A TRIPOLAR CURVA C",
+                        cabo: "70mm² - 1KV - XLPE",
+                        ramal: "3x70+70 CU XLPE",
+                        tipo: "CATEGORIA T4 - Trifásico 127/220V"
+                    }
+                },
+                "T5": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "95mm² - 1KV - XLPE",
+                        ramal: "3x95+95 CU XLPE",
+                        tipo: "CATEGORIA T5 - Trifásico 127/220V"
+                    }
+                },
+                "M2": {
+                    "220_380_MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico 6mm²",
+                        tipo: "CATEGORIA M2 - Monofásico 220/380V"
                     }
                 },
                 "M3": {
-                    "MONOFASICO": {
-                        disjuntor: "Consultar CEMIG",
-                        cabo: "Consultar CEMIG",
-                        ramal: "Consultar CEMIG",
-                        tipo: "Consultar CEMIG"
+                    "220_380_MONOFASICO": {
+                        disjuntor: "63A MONOPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico 16mm²",
+                        tipo: "CATEGORIA M3 - Monofásico 220/380V"
                     }
                 },
                 "T6": {
-                    "TRIFASICO": {
-                        disjuntor: "Consultar CEMIG",
-                        cabo: "Consultar CEMIG",
-                        ramal: "Consultar CEMIG",
-                        tipo: "Consultar CEMIG"
+                    "220_380_TRIFASICO": {
+                        disjuntor: "32A TRIPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "3x6+6 CU XLPE",
+                        tipo: "CATEGORIA T6 - Trifásico 220/380V"
                     }
                 },
                 "T7": {
-                    "TRIFASICO": {
-                        disjuntor: "Consultar CEMIG",
-                        cabo: "Consultar CEMIG",
-                        ramal: "Consultar CEMIG",
-                        tipo: "Consultar CEMIG"
+                    "220_380_TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "3x6+6 CU XLPE",
+                        tipo: "CATEGORIA T7 - Trifásico 220/380V"
+                    }
+                },
+                "T8": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "3x10+10 CU XLPE",
+                        tipo: "CATEGORIA T8 - Trifásico 220/380V"
+                    }
+                },
+                "T9": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T9 - Trifásico 220/380V"
+                    }
+                },
+                "T10": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "80A TRIPOLAR CURVA C",
+                        cabo: "25mm² - 1KV - XLPE",
+                        ramal: "3x25+25 CU XLPE",
+                        tipo: "CATEGORIA T10 - Trifásico 220/380V"
+                    }
+                },
+                "T11": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² - 1KV - XLPE",
+                        ramal: "3x35+35 CU XLPE",
+                        tipo: "CATEGORIA T11 - Trifásico 220/380V"
+                    }
+                },
+                "T12": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "50mm² - 1KV - XLPE",
+                        ramal: "3x50+50 CU XLPE",
+                        tipo: "CATEGORIA T12 - Trifásico 220/380V"
                     }
                 }
             }
@@ -1211,8 +1451,52 @@
             updateInversorOptions();
             configTensaoGroup.style.display = concessionaria ? 'block' : 'none';
             configOrlaGroup.style.display = concessionaria === 'EQUATORIAL' ? 'block' : 'none';
+            document.getElementById('configRedeCoelbaGroup').style.display = concessionaria === 'COELBA' ? 'block' : 'none';
+            document.getElementById('cargaInstaladaGroup').style.display = concessionaria ? 'block' : 'none';
+
+            // CEMIG: só permite bifásico ou trifásico
+            if (concessionaria === 'CEMIG') {
+                const tensaoSel = document.getElementById('configTensao');
+                tensaoSel.innerHTML = `
+                    <option value="BIFASICO">Bifásico (127/220V)</option>
+                    <option value="TRIFASICO">Trifásico (127/220V)</option>
+                `;
+                tensaoSel.value = 'BIFASICO';
+            } else if (concessionaria === 'COELBA') {
+                const tensaoSel = document.getElementById('configTensao');
+                const rede = document.getElementById('configRedeCoelba').value;
+                updateCoelbaTensaoOptions(rede);
+            } else {
+                const tensaoSel = document.getElementById('configTensao');
+                tensaoSel.innerHTML = `
+                    <option value="MONOFASICO">Monofásico</option>
+                    <option value="TRIFASICO">Trifásico</option>
+                `;
+            }
             clearResults();
         });
+
+        document.getElementById('configRedeCoelba').addEventListener('change', function() {
+            updateCoelbaTensaoOptions(this.value);
+            clearResults();
+            calculateDimensionamento();
+        });
+
+        function updateCoelbaTensaoOptions(rede) {
+            const tensaoSel = document.getElementById('configTensao');
+            if (rede === '127_220') {
+                tensaoSel.innerHTML = `
+                    <option value="127_220_MONOFASICO">Monofásico (127/220V)</option>
+                    <option value="127_220_BIFASICO">Bifásico (127/220V)</option>
+                    <option value="127_220_TRIFASICO">Trifásico (127/220V)</option>
+                `;
+            } else {
+                tensaoSel.innerHTML = `
+                    <option value="220_380_MONOFASICO">Monofásico (220/380V)</option>
+                    <option value="220_380_TRIFASICO">Trifásico (220/380V)</option>
+                `;
+            }
+        }
 
         configTensao.addEventListener('change', function() {
             updateInversorOptions();
@@ -1230,14 +1514,23 @@
             if (selectedInversorValue) {
                 const inversor = JSON.parse(selectedInversorValue);
                 
-                // Verificar compatibilidade para rede monofásica
-                if (configTensao.value === 'MONOFASICO' && inversor.classe === 'TRIFÁSICO') {
-                    alert('Inversor trifásico não pode ser conectado em rede monofásica');
+                // Verificar compatibilidade para rede monofásica/bifásica
+                const cfgVal = configTensao.value;
+                const isMono = cfgVal.includes('MONOFASICO') || cfgVal === 'MONOFASICO';
+                const isBif = cfgVal.includes('BIFASICO') || cfgVal === 'BIFASICO';
+                if ((isMono || isBif) && inversor.classe === 'TRIFÁSICO') {
+                    alert('Inversor trifásico não pode ser conectado em rede monofásica/bifásica');
                     return;
                 }
                 
                 addInversor(inversor);
                 inversorSelect.value = '';
+                calculateDimensionamento();
+            }
+        });
+
+        document.getElementById('cargaInstaladaInput').addEventListener('input', function() {
+            if (selectedInversors.length > 0) {
                 calculateDimensionamento();
             }
         });
@@ -1251,13 +1544,20 @@
 
             if (!concessionaria || !config) return;
 
+            // Determinar se é mono ou trifásico pelo prefixo do config value
+            const isMono = config.includes('MONOFASICO') || config === 'MONOFASICO';
+            const isTrif = config.includes('TRIFASICO') || config === 'TRIFASICO';
+            const isBif = config.includes('BIFASICO') || config === 'BIFASICO';
+
             let filteredInversors = [];
             
-            if (config === 'MONOFASICO') {
-                // Em rede monofásica: só mostra inversores monofásicos
+            if (isMono) {
+                filteredInversors = bancoDeDados.filter(inv => inv.classe === "MONOFÁSICO");
+            } else if (isBif) {
+                // Bifásico: mostra monofásicos (pois bifásico é 2 fases de monofásico)
                 filteredInversors = bancoDeDados.filter(inv => inv.classe === "MONOFÁSICO");
             } else {
-                // Em rede trifásica: mostra tanto trifásicos quanto monofásicos
+                // Trifásico: mostra tanto trifásicos quanto monofásicos
                 filteredInversors = bancoDeDados.filter(inv => 
                     inv.classe === "TRIFÁSICO" || inv.classe === "MONOFÁSICO"
                 );
@@ -1308,6 +1608,7 @@
             const concessionaria = concessionariaSelect.value;
             const config = configTensao.value;
             const configOrlaValue = configOrla.value;
+            const cargaInstaladaVal = parseFloat(document.getElementById('cargaInstaladaInput').value) || 0;
 
             if (!concessionaria || !config || selectedInversors.length === 0) {
                 clearResults();
@@ -1319,8 +1620,25 @@
             const correnteTotal = selectedInversors.reduce((sum, inv) => sum + inv.corrente, 0);
             const potenciaTotal = selectedInversors.reduce((sum, inv) => sum + inv.potencia, 0);
 
-            // Determinar classe inicial baseada na potência
-            let classe = determinarClasse(concessionaria, config, potenciaTotal);
+            // Base do dimensionamento: maior entre potência dos inversores e carga instalada
+            const potenciaBase = Math.max(potenciaTotal, cargaInstaladaVal);
+            const usouCargaInstalada = cargaInstaladaVal > potenciaTotal;
+
+            // Mostrar resultados auxiliares de carga instalada
+            if (cargaInstaladaVal > 0) {
+                document.getElementById('cargaInstaladaResultItem').style.display = 'flex';
+                document.getElementById('baseDimensionamentoItem').style.display = 'flex';
+                document.getElementById('cargaInstaladaResult').textContent = `${cargaInstaladaVal.toFixed(2)}kW`;
+                document.getElementById('baseDimensionamento').textContent = usouCargaInstalada
+                    ? `${potenciaBase.toFixed(2)}kW (Carga Instalada é maior)`
+                    : `${potenciaBase.toFixed(2)}kW (Potência dos Inversores é maior)`;
+            } else {
+                document.getElementById('cargaInstaladaResultItem').style.display = 'none';
+                document.getElementById('baseDimensionamentoItem').style.display = 'none';
+            }
+
+            // Determinar classe inicial baseada na potência base
+            let classe = determinarClasse(concessionaria, config, potenciaBase);
             let classeOriginal = classe;
             let ajusteRealizado = false;
 
@@ -1336,7 +1654,15 @@
             // Obter configuração da classe
             let configClasse = null;
             if (classe && dimensionamento[concessionaria] && dimensionamento[concessionaria][classe]) {
-                configClasse = {...dimensionamento[concessionaria][classe][config]};
+                const classeData = dimensionamento[concessionaria][classe];
+                // Tentar obter config pelo config exato, ou pelo primeiro disponível
+                if (classeData[config]) {
+                    configClasse = {...classeData[config]};
+                } else {
+                    // fallback: pega a primeira config disponível
+                    const firstKey = Object.keys(classeData)[0];
+                    configClasse = firstKey ? {...classeData[firstKey]} : null;
+                }
                 
                 // Ajustar para Equatorial baseado na orla
                 if (concessionaria === 'EQUATORIAL') {
@@ -1375,46 +1701,49 @@
             // Exibir informações de demanda
             if (classe) {
                 const faixas = classesDemanda[concessionaria][config];
-                const faixa = faixas.find(f => f.classe === classe);
-                const pdClasse = obterPDClasse(concessionaria, config, classe);
-                const cargaMinima = calcularCargaMinima(potenciaTotal, faixa);
-                
-                document.getElementById('faixaDemanda').textContent = `${faixa.min}kW - ${faixa.max}kW`;
-                document.getElementById('classeSistema').textContent = classe;
-                document.getElementById('potenciaDisponibilizada').textContent = `${pdClasse}kW`;
-                
-                // Verificar se a potência está dentro da PD
-                const dentroDaPD = potenciaTotal <= pdClasse;
-                document.getElementById('statusPotencia').innerHTML = dentroDaPD ? 
-                    '<span style="color: green;">✅ Dentro do limite da PD</span>' : 
-                    '<span style="color: red;">❌ Excede a PD</span>';
-                
-                document.getElementById('cargaMinima').innerHTML = `
-                    ${cargaMinima}kW
-                    ${cargaMinima > faixa.min ? `<br><small style="color: #e67e22;">(Ajustada para atender a potência dos inversores)</small>` : ''}
-                `;
-                
-                // Informação sobre carga necessária CORRIGIDA
-                cargaNecessariaInfo.style.display = 'block';
-                if (potenciaTotal > pdClasse) {
-                    cargaNecessariaInfo.className = 'error';
-                    document.getElementById('cargaNecessariaText').innerHTML = 
-                        `A potência total (<strong>${potenciaTotal.toFixed(2)}kW</strong>) excede a PD da classe <strong>${classe}</strong> 
-                        (<strong>${pdClasse}kW</strong>). Considere reduzir a potência ou alterar a classe.`;
-                } else if (cargaMinima > faixa.min) {
-                    cargaNecessariaInfo.className = 'warning';
-                    document.getElementById('cargaNecessariaText').innerHTML = 
-                        `Para a classe <strong>${classe}</strong> a carga instalada deve ser de <strong>${cargaMinima}kW a ${faixa.max}kW</strong>. 
-                        <br><small>💡 <strong>Importante:</strong> A carga instalada (${cargaMinima}kW) deve ser ≥ à potência dos inversores (${potenciaTotal.toFixed(2)}kW)</small>`;
+                if (faixas) {
+                    const faixa = faixas.find(f => f.classe === classe);
+                    const pdClasse = obterPDClasse(concessionaria, config, classe);
+                    const cargaMinima = calcularCargaMinima(potenciaBase, faixa);
+                    
+                    document.getElementById('faixaDemanda').textContent = `${faixa.min}kW - ${faixa.max}kW`;
+                    document.getElementById('classeSistema').textContent = classe;
+                    document.getElementById('potenciaDisponibilizada').textContent = `${pdClasse}kW`;
+                    
+                    const dentroDaPD = potenciaBase <= pdClasse;
+                    document.getElementById('statusPotencia').innerHTML = dentroDaPD ? 
+                        '<span style="color: green;">✅ Dentro do limite da PD</span>' : 
+                        '<span style="color: red;">❌ Excede a PD</span>';
+                    
+                    document.getElementById('cargaMinima').innerHTML = `
+                        ${cargaMinima}kW
+                        ${cargaMinima > faixa.min ? `<br><small style="color: #e67e22;">(Ajustada para atender a base de dimensionamento)</small>` : ''}
+                    `;
+                    
+                    cargaNecessariaInfo.style.display = 'block';
+                    if (potenciaBase > pdClasse) {
+                        cargaNecessariaInfo.className = 'error';
+                        document.getElementById('cargaNecessariaText').innerHTML = 
+                            `A base de dimensionamento (<strong>${potenciaBase.toFixed(2)}kW</strong>) excede a PD da classe <strong>${classe}</strong> 
+                            (<strong>${pdClasse}kW</strong>). Considere reduzir a potência ou alterar a classe.`;
+                    } else if (cargaMinima > faixa.min) {
+                        cargaNecessariaInfo.className = 'warning';
+                        document.getElementById('cargaNecessariaText').innerHTML = 
+                            `Para a classe <strong>${classe}</strong> a carga instalada deve ser de <strong>${cargaMinima}kW a ${faixa.max}kW</strong>. 
+                            <br><small>💡 <strong>Importante:</strong> A carga instalada (${cargaMinima}kW) deve ser ≥ à base de dimensionamento (${potenciaBase.toFixed(2)}kW)</small>`;
+                    } else {
+                        cargaNecessariaInfo.className = 'success';
+                        document.getElementById('cargaNecessariaText').innerHTML = 
+                            `Sistema adequado para a classe <strong>${classe}</strong>. 
+                            Base: <strong>${potenciaBase.toFixed(2)}kW</strong> | PD: <strong>${pdClasse}kW</strong> | 
+                            Carga mínima: <strong>${cargaMinima}kW</strong>`;
+                    }
+                    
+                    demandaInfoDiv.style.display = 'block';
                 } else {
-                    cargaNecessariaInfo.className = 'success';
-                    document.getElementById('cargaNecessariaText').innerHTML = 
-                        `Sistema adequado para a classe <strong>${classe}</strong>. 
-                        Potência: <strong>${potenciaTotal.toFixed(2)}kW</strong> | PD: <strong>${pdClasse}kW</strong> | 
-                        Carga mínima: <strong>${cargaMinima}kW</strong>`;
+                    demandaInfoDiv.style.display = 'none';
+                    cargaNecessariaInfo.style.display = 'none';
                 }
-                
-                demandaInfoDiv.style.display = 'block';
             } else {
                 demandaInfoDiv.style.display = 'none';
                 cargaNecessariaInfo.style.display = 'none';
