@@ -332,6 +332,7 @@
                         <option value="ENERGISA_PB">ENERGISA PB</option>
                         <option value="NEOENERGIA">Neoenergia (PE/COSEM/DF)</option>
                         <option value="EQUATORIAL">Equatorial AL/PI</option>
+                        <option value="EQUATORIAL_AP_PA_RS">Equatorial AP/PA/RS (220/127V)</option>
                         <option value="CEMIG">CEMIG (MG)</option>
                         <option value="COELBA">COELBA (BA)</option>
                     </select>
@@ -619,7 +620,7 @@
             { inversor: "SOLPLANET -ASW7300-S ", corrente: 40.2, classe: "MONOFÁSICO", potencia: 7.3 },
             { inversor: "SOLPLANET -ASW7500-S ", corrente: 40.2, classe: "MONOFÁSICO", potencia: 7.5 },
             { inversor: "SOLPLANET -ASW8000-S ", corrente: 40.2, classe: "MONOFÁSICO", potencia: 8 },
-            { inversor: "SOLPLANET -ASW9100-S ", corrente: 50, classe: "MONOFÁSICO", potencia: 9.1 },
+            { inversor: "SOLPLANET -ASW9100-S ", corrente: 50.2, classe: "MONOFÁSICO", potencia: 9.1 },
             { inversor: "SOLPLANET -ASW10000-S ", corrente: 50.2, classe: "MONOFÁSICO", potencia: 10 },
             { inversor: "KEHUA -SPI-6000B X2 ", corrente: 26, classe: "MONOFÁSICO", potencia: 6 },
             { inversor: "KEHUA -SPI-8000B X2 ", corrente: 38.3, classe: "MONOFÁSICO", potencia: 8 },
@@ -792,6 +793,23 @@
                     {min: 25.1, max: 38, classe: "T3", pd: 38},
                     {min: 38.1, max: 54, classe: "T4", pd: 54},
                     {min: 54.1, max: 75, classe: "T5", pd: 75}
+                ]
+            },
+            "EQUATORIAL_AP_PA_RS": {
+                "BIFASICO": [
+                    {min: 0, max: 10, classe: "B1", pd: 10},
+                    {min: 10.1, max: 12, classe: "B2", pd: 12},
+                    {min: 12.1, max: 15, classe: "B3", pd: 15}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 15, classe: "T1", pd: 15},
+                    {min: 15.1, max: 17, classe: "T2", pd: 17},
+                    {min: 17.1, max: 24, classe: "T3", pd: 24},
+                    {min: 24.1, max: 35, classe: "T4", pd: 35},
+                    {min: 35.1, max: 44, classe: "T5", pd: 44},
+                    {min: 44.1, max: 52, classe: "T6", pd: 52},
+                    {min: 52.1, max: 61, classe: "T7", pd: 61},
+                    {min: 61.1, max: 75, classe: "T8", pd: 75}
                 ]
             },
             "COELBA": {
@@ -1032,6 +1050,96 @@
                         cabo: "Cabo de cobre multiplexado 35mm²",
                         ramal: "Cabo de cobre multiplexado 35mm²",
                         tipo: "CATEGORIA T5"
+                    }
+                }
+            },
+            "EQUATORIAL_AP_PA_RS": {
+                "B1": {
+                    "BIFASICO": {
+                        disjuntor: "50A BIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE",
+                        tipo: "BIFÁSICO 220/127V - B1 (0 a 10kW)"
+                    }
+                },
+                "B2": {
+                    "BIFASICO": {
+                        disjuntor: "63A BIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        tipo: "BIFÁSICO 220/127V - B2 (10,1 a 12kW)"
+                    }
+                },
+                "B3": {
+                    "BIFASICO": {
+                        disjuntor: "70A BIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        tipo: "BIFÁSICO 220/127V - B3 (12,1 a 15kW)"
+                    }
+                },
+                "T1": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T1 (0 a 15kW)"
+                    }
+                },
+                "T2": {
+                    "TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T2 (15,1 a 17kW)"
+                    }
+                },
+                "T3": {
+                    "TRIFASICO": {
+                        disjuntor: "70A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 16mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 16mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T3 (17,1 a 24kW)"
+                    }
+                },
+                "T4": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 25mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 25mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T4 (24,1 a 35kW)"
+                    }
+                },
+                "T5": {
+                    "TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 35mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 35mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T5 (35,1 a 44kW)"
+                    }
+                },
+                "T6": {
+                    "TRIFASICO": {
+                        disjuntor: "150A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 50mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 50mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T6 (44,1 a 52kW)"
+                    }
+                },
+                "T7": {
+                    "TRIFASICO": {
+                        disjuntor: "175A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T7 (52,1 a 61kW)"
+                    }
+                },
+                "T8": {
+                    "TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T8 (61,1 a 75kW)"
                     }
                 }
             },
@@ -1307,6 +1415,36 @@
             }
         };
 
+        // Configuração para Equatorial AP/PA/RS baseada na distância da orla
+        const configEquatorialApPaRsOrla = {
+            "ATE_2KM": {
+                "B1": { cabo: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE" },
+                "B2": { cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE" },
+                "B3": { cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE" },
+                "T1": { cabo: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE" },
+                "T2": { cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE" },
+                "T3": { cabo: "Cabo de cobre concêntrico 16mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 16mm² - 1KV - XLPE" },
+                "T4": { cabo: "Cabo de cobre concêntrico 25mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 25mm² - 1KV - XLPE" },
+                "T5": { cabo: "Cabo de cobre concêntrico 35mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 35mm² - 1KV - XLPE" },
+                "T6": { cabo: "Cabo de cobre concêntrico 50mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 50mm² - 1KV - XLPE" },
+                "T7": { cabo: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE" },
+                "T8": { cabo: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE" }
+            },
+            "ACIMA_2KM": {
+                "B1": { cabo: "Cabo de Alumínio multiplexado 10mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 10mm² - 1KV - XLPE" },
+                "B2": { cabo: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE" },
+                "B3": { cabo: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE" },
+                "T1": { cabo: "Cabo de Alumínio multiplexado 10mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 10mm² - 1KV - XLPE" },
+                "T2": { cabo: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE" },
+                "T3": { cabo: "Cabo de Alumínio multiplexado 25mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 25mm² - 1KV - XLPE" },
+                "T4": { cabo: "Cabo de Alumínio multiplexado 50mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 50mm² - 1KV - XLPE" },
+                "T5": { cabo: "Cabo de Alumínio multiplexado 70mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 70mm² - 1KV - XLPE" },
+                "T6": { cabo: "Cabo de Alumínio multiplexado 70mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 70mm² - 1KV - XLPE" },
+                "T7": { cabo: "Cabo de Alumínio multiplexado 95mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 95mm² - 1KV - XLPE" },
+                "T8": { cabo: "Cabo de Alumínio multiplexado 120mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 120mm² - 1KV - XLPE" }
+            }
+        };
+
         // Função para calcular o disjuntor individual CORRIGIDA
         function calcularDisjuntor(corrente) {
             const faixas = [
@@ -1456,16 +1594,16 @@
             const concessionaria = this.value;
             updateInversorOptions();
             configTensaoGroup.style.display = concessionaria ? 'block' : 'none';
-            configOrlaGroup.style.display = concessionaria === 'EQUATORIAL' ? 'block' : 'none';
+            configOrlaGroup.style.display = (concessionaria === 'EQUATORIAL' || concessionaria === 'EQUATORIAL_AP_PA_RS') ? 'block' : 'none';
             document.getElementById('configRedeCoelbaGroup').style.display = concessionaria === 'COELBA' ? 'block' : 'none';
             document.getElementById('cargaInstaladaGroup').style.display = concessionaria ? 'block' : 'none';
 
             // CEMIG: só permite bifásico ou trifásico
-            if (concessionaria === 'CEMIG') {
+            if (concessionaria === 'CEMIG' || concessionaria === 'EQUATORIAL_AP_PA_RS') {
                 const tensaoSel = document.getElementById('configTensao');
                 tensaoSel.innerHTML = `
-                    <option value="BIFASICO">Bifásico (127/220V)</option>
-                    <option value="TRIFASICO">Trifásico (127/220V)</option>
+                    <option value="BIFASICO">Bifásico (220/127V)</option>
+                    <option value="TRIFASICO">Trifásico (220/127V)</option>
                 `;
                 tensaoSel.value = 'BIFASICO';
             } else if (concessionaria === 'COELBA') {
@@ -1673,6 +1811,12 @@
                 // Ajustar para Equatorial baseado na orla
                 if (concessionaria === 'EQUATORIAL') {
                     const configOrlaData = configEquatorialOrla[configOrlaValue];
+                    if (configOrlaData && configOrlaData[classe]) {
+                        configClasse.cabo = configOrlaData[classe].cabo;
+                        configClasse.ramal = configOrlaData[classe].ramal;
+                    }
+                } else if (concessionaria === 'EQUATORIAL_AP_PA_RS') {
+                    const configOrlaData = configEquatorialApPaRsOrla[configOrlaValue];
                     if (configOrlaData && configOrlaData[classe]) {
                         configClasse.cabo = configOrlaData[classe].cabo;
                         configClasse.ramal = configOrlaData[classe].ramal;
