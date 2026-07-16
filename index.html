@@ -340,6 +340,7 @@
 
                 <div class="form-group">
                     <label for="inversorSelect">📋 Inversor:</label>
+                    <input type="text" id="inversorSearch" placeholder="🔎 Buscar pelo nome do inversor..." style="margin-bottom: 10px;">
                     <div class="inversor-selection">
                         <select id="inversorSelect">
                             <option value="">-- Selecione --</option>
@@ -1592,6 +1593,7 @@
         // Elementos DOM
         const concessionariaSelect = document.getElementById('concessionariaSelect');
         const inversorSelect = document.getElementById('inversorSelect');
+        const inversorSearch = document.getElementById('inversorSearch');
         const addInversorBtn = document.getElementById('addInversorBtn');
         const selectedInversorsDiv = document.getElementById('selectedInversors');
         const configTensaoGroup = document.getElementById('configTensaoGroup');
@@ -1609,6 +1611,10 @@
         // Event Listeners
         concessionariaSelect.addEventListener('change', function() {
             const concessionaria = this.value;
+            // Trocar de concessionária invalida os inversores já selecionados
+            // (podem não ser compatíveis com a nova config de tensão/classes).
+            selectedInversors = [];
+            renderSelectedInversors();
             updateInversorOptions();
             configTensaoGroup.style.display = concessionaria ? 'block' : 'none';
             configOrlaGroup.style.display = (concessionaria === 'EQUATORIAL' || concessionaria === 'EQUATORIAL_AP_PA_RS') ? 'block' : 'none';
@@ -1660,6 +1666,10 @@
         }
 
         configTensao.addEventListener('change', function() {
+            // Trocar mono/bi/trifásico também invalida os inversores já
+            // selecionados (mesmo motivo do handler de concessionária acima).
+            selectedInversors = [];
+            renderSelectedInversors();
             updateInversorOptions();
             clearResults();
         });
@@ -1668,6 +1678,10 @@
             if (selectedInversors.length > 0) {
                 calculateDimensionamento();
             }
+        });
+
+        inversorSearch.addEventListener('input', function() {
+            updateInversorOptions();
         });
 
         addInversorBtn.addEventListener('click', function() {
@@ -1696,12 +1710,24 @@
             }
         });
 
+        // Remove acentos e caixa para permitir busca por nome mais tolerante
+        function normalizarBusca(texto) {
+            return (texto || '')
+                .toString()
+                .normalize('NFD')
+                .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
+                .toLowerCase()
+                .trim();
+        }
+
         // Função para atualizar opções de inversores CORRIGIDA
         function updateInversorOptions() {
             const config = configTensao.value;
             const concessionaria = concessionariaSelect.value;
-            
+            const termoBusca = normalizarBusca(inversorSearch.value);
+
             inversorSelect.innerHTML = '<option value="">-- Selecione --</option>';
+            inversorSelect.size = 1;
 
             if (!concessionaria || !config) return;
 
@@ -1711,7 +1737,7 @@
             const isBif = config.includes('BIFASICO') || config === 'BIFASICO';
 
             let filteredInversors = [];
-            
+
             if (isMono) {
                 filteredInversors = bancoDeDados.filter(inv => inv.classe === "MONOFÁSICO");
             } else if (isBif) {
@@ -1719,9 +1745,20 @@
                 filteredInversors = bancoDeDados.filter(inv => inv.classe === "MONOFÁSICO");
             } else {
                 // Trifásico: mostra tanto trifásicos quanto monofásicos
-                filteredInversors = bancoDeDados.filter(inv => 
+                filteredInversors = bancoDeDados.filter(inv =>
                     inv.classe === "TRIFÁSICO" || inv.classe === "MONOFÁSICO"
                 );
+            }
+
+            if (termoBusca) {
+                // Cada palavra digitada precisa aparecer no nome (em qualquer posição),
+                // então "huawei 15k" acha "HUAWEI - SUN2000-15K-MB0" mesmo sem bater
+                // caractere por caractere com o nome completo.
+                const palavras = termoBusca.split(/\s+/).filter(Boolean);
+                filteredInversors = filteredInversors.filter(inv => {
+                    const nomeNormalizado = normalizarBusca(inv.inversor);
+                    return palavras.every(palavra => nomeNormalizado.includes(palavra));
+                });
             }
 
             filteredInversors.forEach(inv => {
@@ -1730,6 +1767,12 @@
                 option.textContent = `${inv.inversor} (${inv.potencia}kW - ${inv.corrente}A - ${inv.classe})`;
                 inversorSelect.appendChild(option);
             });
+
+            // Enquanto o usuário busca, expande o select para parecer uma lista
+            // de resultados (em vez de um combo fechado), até um limite razoável.
+            if (termoBusca) {
+                inversorSelect.size = Math.min(filteredInversors.length + 1, 8);
+            }
         }
 
         // Função para adicionar inversor à lista (AGORA PERMITE MÚLTIPLOS)
@@ -1884,16 +1927,16 @@
                     
                     document.getElementById('cargaMinima').innerHTML = `
                         ${cargaMinima}kW
-                        ${cargaMinima > faixa.min ? `<br><small style="color: #e67e22;">(Ajustada para atender a base de dimensionamento)</small>` : ''}
+                        ${ajusteRealizado ? `<br><small style="color: #e67e22;">(Ajustada para atender a base de dimensionamento)</small>` : ''}
                     `;
-                    
+
                     cargaNecessariaInfo.style.display = 'block';
                     if (potenciaBase > pdClasse) {
                         cargaNecessariaInfo.className = 'error';
-                        document.getElementById('cargaNecessariaText').innerHTML = 
-                            `A base de dimensionamento (<strong>${potenciaBase.toFixed(2)}kW</strong>) excede a PD da classe <strong>${classe}</strong> 
+                        document.getElementById('cargaNecessariaText').innerHTML =
+                            `A base de dimensionamento (<strong>${potenciaBase.toFixed(2)}kW</strong>) excede a PD da classe <strong>${classe}</strong>
                             (<strong>${pdClasse}kW</strong>). Considere reduzir a potência ou alterar a classe.`;
-                    } else if (cargaMinima > faixa.min) {
+                    } else if (ajusteRealizado) {
                         cargaNecessariaInfo.className = 'warning';
                         document.getElementById('cargaNecessariaText').innerHTML = 
                             `Para a classe <strong>${classe}</strong> a carga instalada deve ser de <strong>${cargaMinima}kW a ${faixa.max}kW</strong>. 
