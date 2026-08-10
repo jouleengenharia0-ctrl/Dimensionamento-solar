@@ -1,0 +1,1807 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Completo - Dimensionamento Inversores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .config-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .results {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            border-left: 5px solid #3498db;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 200px;
+        }
+
+        .result-value {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1.1em;
+            text-align: right;
+            flex: 1;
+        }
+
+        .highlight {
+            color: #e74c3c;
+            background: #fff5f5;
+            padding: 3px 8px;
+            border-radius: 5px;
+        }
+
+        .concessionaria-info {
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 5px solid;
+        }
+
+        .celpe { background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%); color: white; border-left-color: #c23616; }
+        .energisa { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; border-left-color: #008f7a; }
+        .neoenergia { background: linear-gradient(135deg, #0984e3 0%, #074b83 100%); color: white; border-left-color: #063970; }
+        .equatorial { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); color: white; border-left-color: #8e44ad; }
+        .cemig { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border-left-color: #d35400; }
+        .coelba { background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; border-left-color: #0e8a72; }
+
+        .concessionaria-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .concessionaria-item:last-child {
+            border-bottom: none;
+        }
+
+        .concessionaria-label {
+            font-weight: 600;
+        }
+
+        .concessionaria-value {
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .demanda-info {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .demanda-info h4 {
+            color: #2e7d32;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #6c757d;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .inversor-selection {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .inversor-selection select {
+            flex: 1;
+        }
+
+        .inversor-selection button {
+            padding: 12px 15px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .inversor-selection button:hover {
+            background: #2980b9;
+        }
+
+        .selected-inversors {
+            margin-top: 15px;
+        }
+
+        .selected-inversor {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .selected-inversor button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .selected-inversor button:hover {
+            background: #c0392b;
+        }
+
+        .inversor-details {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f1f8ff;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .inversor-details h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .inversor-detail-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .inversor-detail-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .detail-value {
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .protecao-individual {
+            background: #fff3e0;
+            border: 1px solid #ffb74d;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .config-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><img src="Imagens/ÍCONE Joule.png" alt="joule" style="width:45px;height:45px;"> Sistema Completo - Dimensionamento</h1>
+            <p>Dimensionamento de inversores fotovoltaicos para diferentes concessionárias</p>
+        </div>
+
+        <div class="content">
+            <div class="config-group">
+                <div class="form-group">
+                    <label for="concessionariaSelect">🏢 Concessionária:</label>
+                    <select id="concessionariaSelect">
+                        <option value="">-- Selecione --</option>
+                        <option value="CELPE">CELPE/COSERN</option>
+                        <option value="ENERGISA_PB">ENERGISA PB</option>
+                        <option value="NEOENERGIA">Neoenergia (PE/COSEM/DF)</option>
+                        <option value="EQUATORIAL">Equatorial AL/PI</option>
+                        <option value="EQUATORIAL_AP_PA_RS">Equatorial AP/PA/RS (220/127V)</option>
+                        <option value="CEMIG">CEMIG (MG)</option>
+                        <option value="COELBA">COELBA (BA)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="inversorSelect">📋 Inversor:</label>
+                    <input type="text" id="inversorSearch" placeholder="🔎 Buscar pelo nome do inversor..." style="margin-bottom: 10px;">
+                    <div class="inversor-selection">
+                        <select id="inversorSelect">
+                            <option value="">-- Selecione --</option>
+                        </select>
+                        <button id="addInversorBtn">Adicionar</button>
+                    </div>
+                    <div id="statusBancoInversores" style="font-size:0.85em;color:#888;margin-top:6px;">Carregando banco de inversores...</div>
+                    <a href="cadastro.html" target="_blank" style="display:inline-block;margin-top:8px;font-size:0.9em;color:#3498db;text-decoration:none;font-weight:600;">➕ Cadastrar novo inversor</a>
+                    <div class="selected-inversors" id="selectedInversors">
+                        <!-- Inversores selecionados aparecerão aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="configTensaoGroup" style="display: none;">
+                <label for="configTensao">⚡ Configuração de Entrada:</label>
+                <select id="configTensao">
+                    <option value="MONOFASICO">Monofásico</option>
+                    <option value="TRIFASICO">Trifásico</option>
+                </select>
+                <div class="warning" id="warningTrifasico" style="display: none;">
+                    ⚠️ Inversor trifásico só pode ser conectado em rede trifásica
+                </div>
+            </div>
+
+            <!-- Configuração específica para Equatorial -->
+            <div class="form-group" id="configOrlaGroup" style="display: none;">
+                <label for="configOrla">🏖️ Distância da Orla Marítima (Equatorial):</label>
+                <select id="configOrla">
+                    <option value="ATE_2KM">Até 2 km da orla</option>
+                    <option value="ACIMA_2KM">Acima de 2 km da orla</option>
+                </select>
+            </div>
+
+            <!-- Configuração específica para COELBA - Tipo de Rede -->
+            <div class="form-group" id="configRedeCoelbaGroup" style="display: none;">
+                <label for="configRedeCoelba">🔌 Tipo de Rede COELBA:</label>
+                <select id="configRedeCoelba">
+                    <option value="127_220">127/220V (Rede Monofásica/Bifásica/Trifásica padrão)</option>
+                    <option value="220_380">220/380V (Rede Trifásica 380V)</option>
+                </select>
+            </div>
+
+            <!-- Campo opcional: Carga Instalada Atual -->
+            <div class="form-group" id="cargaInstaladaGroup" style="display: none;">
+                <label for="cargaInstaladaInput">🏠 Carga Instalada Atual (kW) <span style="font-weight:400;color:#888;font-size:0.9em;">(opcional)</span>:</label>
+                <input type="number" id="cargaInstaladaInput" placeholder="Ex: 12.5" min="0" step="0.1">
+                <div class="info" style="margin-top:8px;padding:10px;font-size:0.9em;">
+                    💡 O dimensionamento usará o <strong>maior valor</strong> entre a Potência do Inversor e a Carga Instalada.
+                </div>
+            </div>
+
+            <div class="info" id="cargaNecessariaInfo" style="display: none;">
+                <strong>💡 Informação sobre Carga Instalada:</strong> 
+                <span id="cargaNecessariaText"></span>
+            </div>
+            <!-- Mensagem de ajuste automático -->
+            <div class="success" id="autoAdjustMessage" style="display: none;">
+                <strong>✅ Sistema ajustado automaticamente!</strong> 
+                <span id="adjustmentDetails"></span>
+            </div>
+
+            <div class="results" id="results" style="display: none;">
+                <div class="result-item">
+                    <span class="result-label">🔢 Quantidade de Inversores:</span>
+                    <span class="result-value" id="quantidade">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">⚡ Corrente Máxima Total:</span>
+                    <span class="result-value" id="corrente">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">🔋 Potência Total dos Inversores:</span>
+                    <span class="result-value" id="potenciaTotal">-</span>
+                </div>
+                <div class="result-item" id="cargaInstaladaResultItem" style="display:none;">
+                    <span class="result-label">🏠 Carga Instalada Informada:</span>
+                    <span class="result-value" id="cargaInstaladaResult">-</span>
+                </div>
+                <div class="result-item" id="baseDimensionamentoItem" style="display:none;">
+                    <span class="result-label">📐 Base do Dimensionamento:</span>
+                    <span class="result-value highlight" id="baseDimensionamento">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">🔧 Disjuntor Principal:</span>
+                    <span class="result-value highlight" id="disjuntor">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">🔌 Cabos do Ramal:</span>
+                    <span class="result-value highlight" id="cabos">-</span>
+                </div>
+            </div>
+
+            <div class="demanda-info" id="demandaInfo" style="display: none;">
+                <h4>📊 Requisitos de Carga/Demanda</h4>
+                <div class="result-item">
+                    <span class="result-label">Faixa de Demanda da Classe:</span>
+                    <span class="result-value" id="faixaDemanda">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Classe do Sistema:</span>
+                    <span class="result-value" id="classeSistema">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Potência Disponibilizada (PD):</span>
+                    <span class="result-value" id="potenciaDisponibilizada">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Status da Potência:</span>
+                    <span class="result-value" id="statusPotencia">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Carga Mínima Necessária:</span>
+                    <span class="result-value highlight" id="cargaMinima">-</span>
+                </div>
+            </div>
+
+            <div class="concessionaria-info" id="concessionariaInfo" style="display: none;">
+                <h3>🏠 PADRÃO DE ENTRADA - <span id="infoConcessionariaNome">-</span></h3>
+                <div class="concessionaria-item">
+                    <span class="concessionaria-label">Disjuntor Principal:</span>
+                    <span class="concessionaria-value" id="infoDisjuntor">-</span>
+                </div>
+                <div class="concessionaria-item">
+                    <span class="concessionaria-label">Cabo Fase/Neutro:</span>
+                    <span class="concessionaria-value" id="infoCabo">-</span>
+                </div>
+                <div class="concessionaria-item">
+                    <span class="concessionaria-label">Ramal de Entrada:</span>
+                    <span class="concessionaria-value" id="infoRamal">-</span>
+                </div>
+                <div class="concessionaria-item">
+                    <span class="concessionaria-label">Configuração:</span>
+                    <span class="concessionaria-value" id="infoTipo">-</span>
+                </div>
+            </div>
+            <!-- Seção de proteção individual dos inversores -->
+            <div id="protecaoInversores" style="display: none;">
+                <div class="inversor-details">
+                    <h4>🔧 Sistema de Proteção Individual para Cada Inversor</h4>
+                    <div id="detalhesProtecaoInversores">
+                        <!-- Detalhes de proteção aparecerão aqui -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="inversoresDetails"></div>
+            
+        </div>
+    
+        <div class="footer">
+            <p>Sistema de Dimensionamento - Baseado nas normas das concessionárias</p><br>
+            <p>JouleLab Energia Solar⚡</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+        import { firebaseConfig } from "./firebase-config.js";
+
+        const firebaseApp = initializeApp(firebaseConfig);
+        const db = getFirestore(firebaseApp);
+
+        // Banco de dados de inversores agora vem do Firestore (coleção "inversores").
+        // Cadastro/remoção é feito em cadastro.html; aqui só lemos.
+        let bancoDeDados = [];
+
+        async function carregarBancoDeDados() {
+            const statusEl = document.getElementById('statusBancoInversores');
+            try {
+                const snapshot = await getDocs(collection(db, 'inversores'));
+                bancoDeDados = snapshot.docs.map(doc => doc.data());
+                statusEl.textContent = `${bancoDeDados.length} inversores carregados.`;
+            } catch (erro) {
+                console.error('Erro ao carregar inversores do Firestore:', erro);
+                statusEl.textContent = 'Erro ao carregar banco de inversores. Verifique a conexão.';
+                statusEl.style.color = '#c0392b';
+            }
+        }
+
+        // Estrutura CORRIGIDA das classes de demanda com PD
+        const classesDemanda = {
+            "CELPE": {
+                "MONOFASICO": [
+                    {min: 0, max: 10, classe: "M2", pd: 8.096},
+                    {min: 10.1, max: 15, classe: "M3", pd: 12.75}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 21, classe: "T6", pd: 21.0},
+                    {min: 21.1, max: 26, classe: "T7", pd: 26.0},
+                    {min: 26.1, max: 33, classe: "T8", pd: 33.0},
+                    {min: 33.1, max: 40, classe: "T9", pd: 40.0},
+                    {min: 40.1, max: 52, classe: "T10", pd: 52.0},
+                    {min: 52.1, max: 66, classe: "T11", pd: 66.0},
+                    {min: 66.1, max: 75, classe: "T12", pd: 75.0}
+                ]
+            },
+            "ENERGISA_PB": {
+                "MONOFASICO": [
+                    {min: 0, max: 6, classe: "M1", pd: 6.47},
+                    {min: 6.1, max: 11, classe: "M2", pd: 8.2},
+                    {min: 11.1, max: 15.4, classe: "M3", pd: 13.8}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 26.1, classe: "T1", pd: 26.1},
+                    {min: 26.2, max: 32.6, classe: "T2", pd: 32.6},
+                    {min: 32.7, max: 46.1, classe: "T3", pd: 46.1},
+                    {min: 46.2, max: 65.8, classe: "T4", pd: 65.8},
+                    {min: 65.9, max: 81.5, classe: "T5", pd: 81.5}
+                ]
+            },
+            "EQUATORIAL": {
+                "MONOFASICO": [
+                    {min: 0, max: 4, classe: "M1", pd: 5.75},
+                    {min: 4.1, max: 8, classe: "M2", pd: 8.2},
+                    {min: 8.1, max: 12, classe: "M3", pd: 13.8}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 20, classe: "T1", pd: 20.0},
+                    {min: 20.1, max: 30, classe: "T2", pd: 30.0},
+                    {min: 30.1, max: 40, classe: "T3", pd: 40.0},
+                    {min: 40.1, max: 50, classe: "T4", pd: 50.0},
+                    {min: 50.1, max: 75, classe: "T5", pd: 75.0}
+                ]
+            },
+            "NEOENERGIA": {
+                "MONOFASICO": [
+                    {min: 0, max: 10, classe: "M2/M3", pd: 8.2},
+                    {min: 10.1, max: 15, classe: "M3", pd: 13.8}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 21, classe: "T6", pd: 21.0},
+                    {min: 21.1, max: 26, classe: "T7", pd: 26.0}
+                ]
+            },
+            "CEMIG": {
+                "BIFASICO": [
+                    {min: 0, max: 9.6, classe: "H1", pd: 9.6},
+                    {min: 9.7, max: 15.1, classe: "H2", pd: 15.1}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 15, classe: "T1", pd: 15},
+                    {min: 15.1, max: 25, classe: "T2", pd: 25},
+                    {min: 25.1, max: 38, classe: "T3", pd: 38},
+                    {min: 38.1, max: 54, classe: "T4", pd: 54},
+                    {min: 54.1, max: 75, classe: "T5", pd: 75}
+                ]
+            },
+            "EQUATORIAL_AP_PA_RS": {
+                "BIFASICO": [
+                    {min: 0, max: 10, classe: "B1", pd: 10},
+                    {min: 10.1, max: 12, classe: "B2", pd: 12},
+                    {min: 12.1, max: 15, classe: "B3", pd: 15}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 15, classe: "T1", pd: 15},
+                    {min: 15.1, max: 17, classe: "T2", pd: 17},
+                    {min: 17.1, max: 24, classe: "T3", pd: 24},
+                    {min: 24.1, max: 35, classe: "T4", pd: 35},
+                    {min: 35.1, max: 44, classe: "T5", pd: 44},
+                    {min: 44.1, max: 52, classe: "T6", pd: 52},
+                    {min: 52.1, max: 61, classe: "T7", pd: 61},
+                    {min: 61.1, max: 75, classe: "T8", pd: 75}
+                ]
+            },
+            "COELBA": {
+                "127_220_MONOFASICO": [
+                    {min: 0, max: 5, classe: "M0", pd: 5},
+                    {min: 5.1, max: 10, classe: "M1", pd: 10}
+                ],
+                "127_220_BIFASICO": [
+                    {min: 0, max: 11, classe: "B0", pd: 11},
+                    {min: 11.1, max: 18, classe: "B1", pd: 18}
+                ],
+                "127_220_TRIFASICO": [
+                    {min: 0, max: 19, classe: "T0", pd: 19},
+                    {min: 19.1, max: 24, classe: "T1", pd: 24},
+                    {min: 24.1, max: 38, classe: "T2", pd: 38},
+                    {min: 38.1, max: 47, classe: "T3", pd: 47},
+                    {min: 47.1, max: 57, classe: "T4", pd: 57},
+                    {min: 57.1, max: 75, classe: "T5", pd: 75}
+                ],
+                "220_380_MONOFASICO": [
+                    {min: 0, max: 10, classe: "M2", pd: 10},
+                    {min: 10.1, max: 15, classe: "M3", pd: 15}
+                ],
+                "220_380_TRIFASICO": [
+                    {min: 0, max: 21, classe: "T6", pd: 21},
+                    {min: 21.1, max: 26, classe: "T7", pd: 26},
+                    {min: 26.1, max: 33, classe: "T8", pd: 33},
+                    {min: 33.1, max: 40, classe: "T9", pd: 40},
+                    {min: 40.1, max: 52, classe: "T10", pd: 52},
+                    {min: 52.1, max: 66, classe: "T11", pd: 66},
+                    {min: 66.1, max: 75, classe: "T12", pd: 75}
+                ]
+            }
+        };
+
+        // Estrutura de dimensionamento CORRIGIDA com configuração para Equatorial
+        const dimensionamento = {
+            "CELPE": {
+                "M2": {
+                    "MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico padrão",
+                        tipo: "CATEGORIA M2"
+                    }
+                },
+                "M3": {
+                    "MONOFASICO": {
+                        disjuntor: "63A MONOPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico reforçado",
+                        tipo: "CATEGORIA M3"
+                    }
+                },
+                "T6": {
+                    "TRIFASICO": {
+                        disjuntor: "32A TRIPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "3x6+6 CU XLPE",
+                        tipo: "CATEGORIA T6"
+                    }
+                },
+                "T7": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "3x10+10 CU XLPE",
+                        tipo: "CATEGORIA T7"
+                    }
+                },
+                "T8": {
+                    "TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T8"
+                    }
+                },
+                "T9": {
+                    "TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T9"
+                    }
+                },
+                "T10": {
+                    "TRIFASICO": {
+                        disjuntor: "80A TRIPOLAR CURVA C",
+                        cabo: "25mm² - 1KV - XLPE",
+                        ramal: "3x25+25 CU XLPE",
+                        tipo: "CATEGORIA T10"
+                    }
+                },
+                "T11": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² - 1KV - XLPE",
+                        ramal: "3x35+35 CU XLPE",
+                        tipo: "CATEGORIA T11"
+                    }
+                },
+                "T12": {
+                    "TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "50mm² - 1KV - XLPE",
+                        ramal: "3x50+50 CU XLPE",
+                        tipo: "CATEGORIA T12"
+                    }
+                }
+            },
+            "ENERGISA_PB": {
+                "M1": {
+                    "MONOFASICO": {
+                        disjuntor: "32A MONOPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico padrão",
+                        tipo: "CATEGORIA M1"
+                    }
+                },
+                "M2": {
+                    "MONOFASICO": {
+                        disjuntor: "50A MONOPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico intermediário",
+                        tipo: "CATEGORIA M2"
+                    }
+                },
+                "M3": {
+                    "MONOFASICO": {
+                        disjuntor: "70A MONOPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico reforçado",
+                        tipo: "CATEGORIA M3"
+                    }
+                },
+                "T1": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "3x6+6 CU XLPE",
+                        tipo: "CATEGORIA T1"
+                    }
+                },
+                "T2": {
+                    "TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "3x10+10 CU XLPE",
+                        tipo: "CATEGORIA T2"
+                    }
+                },
+                "T3": {
+                    "TRIFASICO": {
+                        disjuntor: "70A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T3"
+                    }
+                },
+                "T4": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² - 1KV - XLPE",
+                        ramal: "3x35+25 CU XLPE",
+                        tipo: "CATEGORIA T4"
+                    }
+                },
+                "T5": {
+                    "TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "50mm² - 1KV - XLPE",
+                        ramal: "3x50+25 CU XLPE",
+                        tipo: "CATEGORIA T5"
+                    }
+                }
+            },
+            "EQUATORIAL": {
+                "M1": {
+                    "MONOFASICO": {
+                        disjuntor: "25A MONOPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 4mm²",
+                        ramal: "Cabo de cobre concêntrico 4mm²",
+                        tipo: "CATEGORIA M1"
+                    }
+                },
+                "M2": {
+                    "MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 6mm²",
+                        ramal: "Cabo de cobre concêntrico 6mm²",
+                        tipo: "CATEGORIA M2"
+                    }
+                },
+                "M3": {
+                    "MONOFASICO": {
+                        disjuntor: "63A MONOPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 10mm²",
+                        ramal: "Cabo de cobre concêntrico 10mm²",
+                        tipo: "CATEGORIA M3"
+                    }
+                },
+                "T1": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre multiplexado 6mm²",
+                        ramal: "Cabo de cobre multiplexado 6mm²",
+                        tipo: "CATEGORIA T1"
+                    }
+                },
+                "T2": {
+                    "TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre multiplexado 10mm²",
+                        ramal: "Cabo de cobre multiplexado 10mm²",
+                        tipo: "CATEGORIA T2"
+                    }
+                },
+                "T3": {
+                    "TRIFASICO": {
+                        disjuntor: "80A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre multiplexado 16mm²",
+                        ramal: "Cabo de cobre multiplexado 16mm²",
+                        tipo: "CATEGORIA T3"
+                    }
+                },
+                "T4": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre multiplexado 25mm²",
+                        ramal: "Cabo de cobre multiplexado 25mm²",
+                        tipo: "CATEGORIA T4"
+                    }
+                },
+                "T5": {
+                    "TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre multiplexado 35mm²",
+                        ramal: "Cabo de cobre multiplexado 35mm²",
+                        tipo: "CATEGORIA T5"
+                    }
+                }
+            },
+            "EQUATORIAL_AP_PA_RS": {
+                "B1": {
+                    "BIFASICO": {
+                        disjuntor: "50A BIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE",
+                        tipo: "BIFÁSICO 220/127V - B1 (0 a 10kW)"
+                    }
+                },
+                "B2": {
+                    "BIFASICO": {
+                        disjuntor: "63A BIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        tipo: "BIFÁSICO 220/127V - B2 (10,1 a 12kW)"
+                    }
+                },
+                "B3": {
+                    "BIFASICO": {
+                        disjuntor: "70A BIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        tipo: "BIFÁSICO 220/127V - B3 (12,1 a 15kW)"
+                    }
+                },
+                "T1": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T1 (0 a 15kW)"
+                    }
+                },
+                "T2": {
+                    "TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T2 (15,1 a 17kW)"
+                    }
+                },
+                "T3": {
+                    "TRIFASICO": {
+                        disjuntor: "70A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 16mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 16mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T3 (17,1 a 24kW)"
+                    }
+                },
+                "T4": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 25mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 25mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T4 (24,1 a 35kW)"
+                    }
+                },
+                "T5": {
+                    "TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 35mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 35mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T5 (35,1 a 44kW)"
+                    }
+                },
+                "T6": {
+                    "TRIFASICO": {
+                        disjuntor: "150A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 50mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 50mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T6 (44,1 a 52kW)"
+                    }
+                },
+                "T7": {
+                    "TRIFASICO": {
+                        disjuntor: "175A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T7 (52,1 a 61kW)"
+                    }
+                },
+                "T8": {
+                    "TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE",
+                        ramal: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE",
+                        tipo: "TRIFÁSICO 220/127V - T8 (61,1 a 75kW)"
+                    }
+                }
+            },
+            "NEOENERGIA": {
+                "M2/M3": {
+                    "MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "10mm² AL CONC",
+                        ramal: "Ramal aéreo padrão",
+                        tipo: "CATEGORIA M2/M3"
+                    }
+                },
+                "M3": {
+                    "MONOFASICO": {
+                        disjuntor: "63A MONOPOLAR CURVA C",
+                        cabo: "16mm² AL CONC",
+                        ramal: "Ramal aéreo reforçado",
+                        tipo: "CATEGORIA M3"
+                    }
+                },
+                "T6": {
+                    "TRIFASICO": {
+                        disjuntor: "32A TRIPOLAR CURVA C",
+                        cabo: "3x10+10 AL MULT",
+                        ramal: "3x6+6 CU XLPE",
+                        tipo: "CATEGORIA T6"
+                    }
+                },
+                "T7": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "3x10+10 AL MULT",
+                        ramal: "3x6+6 CU XLPE",
+                        tipo: "CATEGORIA T7"
+                    }
+                }
+            },
+            "CEMIG": {
+                "H1": {
+                    "BIFASICO": {
+                        disjuntor: "40A BIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "2x10+10 CU XLPE",
+                        tipo: "CATEGORIA H1 - Bifásico 127/220V"
+                    }
+                },
+                "H2": {
+                    "BIFASICO": {
+                        disjuntor: "63A BIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "2x16+16 CU XLPE",
+                        tipo: "CATEGORIA H2 - Bifásico 127/220V"
+                    }
+                },
+                "T1": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "3x10+10 CU XLPE",
+                        tipo: "CATEGORIA T1 - Trifásico 127/220V"
+                    }
+                },
+                "T2": {
+                    "TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T2 - Trifásico 127/220V"
+                    }
+                },
+                "T3": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² - 1KV - XLPE",
+                        ramal: "3x35+35 CU XLPE",
+                        tipo: "CATEGORIA T3 - Trifásico 127/220V"
+                    }
+                },
+                "T4": {
+                    "TRIFASICO": {
+                        disjuntor: "150A TRIPOLAR CURVA C",
+                        cabo: "70mm² - 1KV - XLPE",
+                        ramal: "3x70+70 CU XLPE",
+                        tipo: "CATEGORIA T4 - Trifásico 127/220V"
+                    }
+                },
+                "T5": {
+                    "TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "95mm² - 1KV - XLPE",
+                        ramal: "3x95+95 CU XLPE",
+                        tipo: "CATEGORIA T5 - Trifásico 127/220V"
+                    }
+                }
+            },
+            "COELBA": {
+                "M0": {
+                    "127_220_MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico 10mm²",
+                        tipo: "CATEGORIA M0 - Monofásico 127/220V"
+                    }
+                },
+                "M1": {
+                    "127_220_MONOFASICO": {
+                        disjuntor: "63A MONOPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico 10mm²",
+                        tipo: "CATEGORIA M1 - Monofásico 127/220V"
+                    }
+                },
+                "B0": {
+                    "127_220_BIFASICO": {
+                        disjuntor: "50A BIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "2x10+10 CU XLPE",
+                        tipo: "CATEGORIA B0 - Bifásico 127/220V"
+                    }
+                },
+                "B1": {
+                    "127_220_BIFASICO": {
+                        disjuntor: "70A BIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "2x16+16 CU XLPE",
+                        tipo: "CATEGORIA B1 - Bifásico 127/220V"
+                    }
+                },
+                "T0": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "3x10+10 CU XLPE",
+                        tipo: "CATEGORIA T0 - Trifásico 127/220V"
+                    }
+                },
+                "T1": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T1 - Trifásico 127/220V"
+                    }
+                },
+                "T2": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² - 1KV - XLPE",
+                        ramal: "3x35+35 CU XLPE",
+                        tipo: "CATEGORIA T2 - Trifásico 127/220V"
+                    }
+                },
+                "T3": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "50mm² - 1KV - XLPE",
+                        ramal: "3x50+50 CU XLPE",
+                        tipo: "CATEGORIA T3 - Trifásico 127/220V"
+                    }
+                },
+                "T4": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "150A TRIPOLAR CURVA C",
+                        cabo: "70mm² - 1KV - XLPE",
+                        ramal: "3x70+70 CU XLPE",
+                        tipo: "CATEGORIA T4 - Trifásico 127/220V"
+                    }
+                },
+                "T5": {
+                    "127_220_TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "95mm² - 1KV - XLPE",
+                        ramal: "3x95+95 CU XLPE",
+                        tipo: "CATEGORIA T5 - Trifásico 127/220V"
+                    }
+                },
+                "M2": {
+                    "220_380_MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico 6mm²",
+                        tipo: "CATEGORIA M2 - Monofásico 220/380V"
+                    }
+                },
+                "M3": {
+                    "220_380_MONOFASICO": {
+                        disjuntor: "63A MONOPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "Ramal monofásico 16mm²",
+                        tipo: "CATEGORIA M3 - Monofásico 220/380V"
+                    }
+                },
+                "T6": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "32A TRIPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "3x6+6 CU XLPE",
+                        tipo: "CATEGORIA T6 - Trifásico 220/380V"
+                    }
+                },
+                "T7": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "6mm² - 1KV - XLPE",
+                        ramal: "3x6+6 CU XLPE",
+                        tipo: "CATEGORIA T7 - Trifásico 220/380V"
+                    }
+                },
+                "T8": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "3x10+10 CU XLPE",
+                        tipo: "CATEGORIA T8 - Trifásico 220/380V"
+                    }
+                },
+                "T9": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² - 1KV - XLPE",
+                        ramal: "3x16+16 CU XLPE",
+                        tipo: "CATEGORIA T9 - Trifásico 220/380V"
+                    }
+                },
+                "T10": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "80A TRIPOLAR CURVA C",
+                        cabo: "25mm² - 1KV - XLPE",
+                        ramal: "3x25+25 CU XLPE",
+                        tipo: "CATEGORIA T10 - Trifásico 220/380V"
+                    }
+                },
+                "T11": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² - 1KV - XLPE",
+                        ramal: "3x35+35 CU XLPE",
+                        tipo: "CATEGORIA T11 - Trifásico 220/380V"
+                    }
+                },
+                "T12": {
+                    "220_380_TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "50mm² - 1KV - XLPE",
+                        ramal: "3x50+50 CU XLPE",
+                        tipo: "CATEGORIA T12 - Trifásico 220/380V"
+                    }
+                }
+            }
+        };
+
+        // Configuração para Equatorial baseada na distância da orla
+        const configEquatorialOrla = {
+            "ATE_2KM": {
+                "M1": { cabo: "Cabo de cobre concêntrico 4mm²", ramal: "Cabo de cobre concêntrico 4mm²" },
+                "M2": { cabo: "Cabo de cobre concêntrico 6mm²", ramal: "Cabo de cobre concêntrico 6mm²" },
+                "M3": { cabo: "Cabo de cobre concêntrico 10mm²", ramal: "Cabo de cobre concêntrico 10mm²" },
+                "T1": { cabo: "Cabo de cobre multiplexado 6mm²", ramal: "Cabo de cobre multiplexado 6mm²" },
+                "T2": { cabo: "Cabo de cobre multiplexado 10mm²", ramal: "Cabo de cobre multiplexado 10mm²" },
+                "T3": { cabo: "Cabo de cobre multiplexado 16mm²", ramal: "Cabo de cobre multiplexado 16mm²" },
+                "T4": { cabo: "Cabo de cobre multiplexado 25mm²", ramal: "Cabo de cobre multiplexado 25mm²" },
+                "T5": { cabo: "Cabo de cobre multiplexado 35mm²", ramal: "Cabo de cobre multiplexado 35mm²" }
+            },
+            "ACIMA_2KM": {
+                "M1": { cabo: "Cabo de Alumínio multiplexado 10mm²", ramal: "Cabo de Alumínio multiplexado 10mm²" },
+                "M2": { cabo: "Cabo de Alumínio multiplexado 10mm²", ramal: "Cabo de Alumínio multiplexado 10mm²" },
+                "M3": { cabo: "Cabo de Alumínio multiplexado 10mm²", ramal: "Cabo de Alumínio multiplexado 10mm²" },
+                "T1": { cabo: "Cabo de Alumínio multiplexado 10mm²", ramal: "Cabo de Alumínio multiplexado 10mm²" },
+                "T2": { cabo: "Cabo de Alumínio multiplexado 16mm²", ramal: "Cabo de Alumínio multiplexado 16mm²" },
+                "T3": { cabo: "Cabo de Alumínio multiplexado 25mm²", ramal: "Cabo de Alumínio multiplexado 25mm²" },
+                "T4": { cabo: "Cabo de Alumínio multiplexado 35mm²", ramal: "Cabo de Alumínio multiplexado 35mm²" },
+                "T5": { cabo: "Cabo de Alumínio multiplexado 50mm²", ramal: "Cabo de Alumínio multiplexado 50mm²" }
+            }
+        };
+
+        // Configuração para Equatorial AP/PA/RS baseada na distância da orla
+        const configEquatorialApPaRsOrla = {
+            "ATE_2KM": {
+                "B1": { cabo: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE" },
+                "B2": { cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE" },
+                "B3": { cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE" },
+                "T1": { cabo: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 6mm² - 1KV - XLPE" },
+                "T2": { cabo: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 10mm² - 1KV - XLPE" },
+                "T3": { cabo: "Cabo de cobre concêntrico 16mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 16mm² - 1KV - XLPE" },
+                "T4": { cabo: "Cabo de cobre concêntrico 25mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 25mm² - 1KV - XLPE" },
+                "T5": { cabo: "Cabo de cobre concêntrico 35mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 35mm² - 1KV - XLPE" },
+                "T6": { cabo: "Cabo de cobre concêntrico 50mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 50mm² - 1KV - XLPE" },
+                "T7": { cabo: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE" },
+                "T8": { cabo: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE", ramal: "Cabo de cobre concêntrico 70mm² - 1KV - XLPE" }
+            },
+            "ACIMA_2KM": {
+                "B1": { cabo: "Cabo de Alumínio multiplexado 10mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 10mm² - 1KV - XLPE" },
+                "B2": { cabo: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE" },
+                "B3": { cabo: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE" },
+                "T1": { cabo: "Cabo de Alumínio multiplexado 10mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 10mm² - 1KV - XLPE" },
+                "T2": { cabo: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 16mm² - 1KV - XLPE" },
+                "T3": { cabo: "Cabo de Alumínio multiplexado 25mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 25mm² - 1KV - XLPE" },
+                "T4": { cabo: "Cabo de Alumínio multiplexado 50mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 50mm² - 1KV - XLPE" },
+                "T5": { cabo: "Cabo de Alumínio multiplexado 70mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 70mm² - 1KV - XLPE" },
+                "T6": { cabo: "Cabo de Alumínio multiplexado 70mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 70mm² - 1KV - XLPE" },
+                "T7": { cabo: "Cabo de Alumínio multiplexado 95mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 95mm² - 1KV - XLPE" },
+                "T8": { cabo: "Cabo de Alumínio multiplexado 120mm² - 1KV - XLPE", ramal: "Cabo de Alumínio multiplexado 120mm² - 1KV - XLPE" }
+            }
+        };
+
+        // Função para calcular o disjuntor individual CORRIGIDA
+        function calcularDisjuntor(corrente) {
+            const faixas = [
+                {max: 9, disjuntor: 10},
+                {max: 14.6, disjuntor: 16},
+                {max: 19.1, disjuntor: 20},
+                {max: 24.1, disjuntor: 25},
+                {max: 31.1, disjuntor: 32},
+                {max: 39.0, disjuntor: 40},
+                {max: 49.1, disjuntor: 50},
+                {max: 62.1, disjuntor: 63},
+                {max: 69.1, disjuntor: 70},
+                {max: 79.1, disjuntor: 80},
+                {max: 89.1, disjuntor: 100},
+                {max: 99.1, disjuntor: 100},
+                {max: 124.1, disjuntor: 125}
+            ];
+            
+            for (let faixa of faixas) {
+                if (corrente <= faixa.max) {
+                    return faixa.disjuntor;
+                }
+            }
+            return "Verificar";
+        }
+
+        // Função para calcular os cabos do inversor individual CORRIGIDA
+        function calcularCabosInversor(disjuntor, classe) {
+            const cabosMonofasico = {
+                10: "4mm²", 16: "4mm²", 20: "4mm²", 25: "4mm²",
+                32: "6mm²", 40: "6mm²", 50: "10mm²", 63: "16mm²",
+                70: "16mm²", 80: "25mm²", 90: "25mm²", 100: "35mm²", 125: "50mm²"
+            };
+            
+            const cabosTrifasico = {
+                20: "4mm²", 25: "4mm²", 32: "6mm²", 40: "10mm²",
+                50: "16mm²", 63: "16mm²", 70: "25mm²", 80: "25mm²",
+                90: "35mm²", 100: "50mm²", 125: "70mm²"
+            };
+            
+            if (classe === "MONOFÁSICO") {
+                return cabosMonofasico[disjuntor] || "Consultar tabela";
+            } else {
+                return cabosTrifasico[disjuntor] || "Consultar tabela";
+            }
+        }
+
+        // Função para extrair valor numérico do disjuntor
+        function extrairValorDisjuntor(disjuntorStr) {
+            const match = disjuntorStr.match(/(\d+)A/);
+            return match ? parseInt(match[1]) : 0;
+        }
+
+        // Função para determinar a classe baseada na potência
+        function determinarClasse(concessionaria, configTensao, potenciaTotal) {
+            const faixas = classesDemanda[concessionaria][configTensao];
+            if (!faixas) return null;
+
+            for (const faixa of faixas) {
+                if (potenciaTotal >= faixa.min && potenciaTotal <= faixa.max) {
+                    return faixa.classe;
+                }
+            }
+            return null;
+        }
+
+        // Função para ajustar a classe baseada na corrente
+        function ajustarClassePorCorrente(concessionaria, configTensao, classeInicial, correnteTotal) {
+            const faixas = classesDemanda[concessionaria][configTensao];
+            if (!faixas) return classeInicial;
+
+            // Encontrar a classe atual
+            let indiceAtual = -1;
+            for (let i = 0; i < faixas.length; i++) {
+                if (faixas[i].classe === classeInicial) {
+                    indiceAtual = i;
+                    break;
+                }
+            }
+
+            if (indiceAtual === -1) return classeInicial;
+
+            // Verificar se a corrente excede o disjuntor da classe atual
+            const classeAtual = dimensionamento[concessionaria][classeInicial][configTensao];
+            const correnteDisjuntorAtual = extrairValorDisjuntor(classeAtual.disjuntor);
+
+            if (correnteTotal <= correnteDisjuntorAtual) {
+                return classeInicial; // Não precisa ajustar
+            }
+
+            // Procurar uma classe com disjuntor maior
+            for (let i = indiceAtual + 1; i < faixas.length; i++) {
+                const classeCandidata = faixas[i].classe;
+                const configClasse = dimensionamento[concessionaria][classeCandidata][configTensao];
+                const correnteDisjuntorCandidato = extrairValorDisjuntor(configClasse.disjuntor);
+
+                if (correnteTotal <= correnteDisjuntorCandidato) {
+                    return classeCandidata;
+                }
+            }
+
+            // Se chegou aqui, não há classe com disjuntor suficiente
+            return null;
+        }
+
+        // Função para calcular PD da classe
+        function obterPDClasse(concessionaria, configTensao, classe) {
+            const faixas = classesDemanda[concessionaria][configTensao];
+            if (!faixas) return 0;
+
+            for (const faixa of faixas) {
+                if (faixa.classe === classe) {
+                    return faixa.pd;
+                }
+            }
+            return 0;
+        }
+
+        // Função para calcular carga mínima necessária CORRIGIDA
+        function calcularCargaMinima(potenciaTotal, faixa) {
+            // A carga mínima deve ser a MAIOR entre a carga mínima da faixa e a potência dos inversores
+            return Math.max(faixa.min, potenciaTotal);
+        }
+
+        // Variáveis globais
+        let selectedInversors = [];
+
+        // Elementos DOM
+        const concessionariaSelect = document.getElementById('concessionariaSelect');
+        const inversorSelect = document.getElementById('inversorSelect');
+        const inversorSearch = document.getElementById('inversorSearch');
+        const addInversorBtn = document.getElementById('addInversorBtn');
+        const selectedInversorsDiv = document.getElementById('selectedInversors');
+        const configTensaoGroup = document.getElementById('configTensaoGroup');
+        const configTensao = document.getElementById('configTensao');
+        const warningTrifasico = document.getElementById('warningTrifasico');
+        const configOrlaGroup = document.getElementById('configOrlaGroup');
+        const configOrla = document.getElementById('configOrla');
+        const resultsDiv = document.getElementById('results');
+        const demandaInfoDiv = document.getElementById('demandaInfo');
+        const concessionariaInfoDiv = document.getElementById('concessionariaInfo');
+        const protecaoInversoresDiv = document.getElementById('protecaoInversores');
+        const cargaNecessariaInfo = document.getElementById('cargaNecessariaInfo');
+        const autoAdjustMessage = document.getElementById('autoAdjustMessage');
+
+        // Event Listeners
+        concessionariaSelect.addEventListener('change', function() {
+            const concessionaria = this.value;
+            // Trocar de concessionária invalida os inversores já selecionados
+            // (podem não ser compatíveis com a nova config de tensão/classes).
+            selectedInversors = [];
+            renderSelectedInversors();
+            updateInversorOptions();
+            configTensaoGroup.style.display = concessionaria ? 'block' : 'none';
+            configOrlaGroup.style.display = (concessionaria === 'EQUATORIAL' || concessionaria === 'EQUATORIAL_AP_PA_RS') ? 'block' : 'none';
+            document.getElementById('configRedeCoelbaGroup').style.display = concessionaria === 'COELBA' ? 'block' : 'none';
+            document.getElementById('cargaInstaladaGroup').style.display = concessionaria ? 'block' : 'none';
+
+            // CEMIG: só permite bifásico ou trifásico
+            if (concessionaria === 'CEMIG' || concessionaria === 'EQUATORIAL_AP_PA_RS') {
+                const tensaoSel = document.getElementById('configTensao');
+                tensaoSel.innerHTML = `
+                    <option value="BIFASICO">Bifásico (220/127V)</option>
+                    <option value="TRIFASICO">Trifásico (220/127V)</option>
+                `;
+                tensaoSel.value = 'BIFASICO';
+            } else if (concessionaria === 'COELBA') {
+                const tensaoSel = document.getElementById('configTensao');
+                const rede = document.getElementById('configRedeCoelba').value;
+                updateCoelbaTensaoOptions(rede);
+            } else {
+                const tensaoSel = document.getElementById('configTensao');
+                tensaoSel.innerHTML = `
+                    <option value="MONOFASICO">Monofásico</option>
+                    <option value="TRIFASICO">Trifásico</option>
+                `;
+            }
+            clearResults();
+        });
+
+        document.getElementById('configRedeCoelba').addEventListener('change', function() {
+            updateCoelbaTensaoOptions(this.value);
+            clearResults();
+            calculateDimensionamento();
+        });
+
+        function updateCoelbaTensaoOptions(rede) {
+            const tensaoSel = document.getElementById('configTensao');
+            if (rede === '127_220') {
+                tensaoSel.innerHTML = `
+                    <option value="127_220_MONOFASICO">Monofásico (127/220V)</option>
+                    <option value="127_220_BIFASICO">Bifásico (127/220V)</option>
+                    <option value="127_220_TRIFASICO">Trifásico (127/220V)</option>
+                `;
+            } else {
+                tensaoSel.innerHTML = `
+                    <option value="220_380_MONOFASICO">Monofásico (220/380V)</option>
+                    <option value="220_380_TRIFASICO">Trifásico (220/380V)</option>
+                `;
+            }
+        }
+
+        configTensao.addEventListener('change', function() {
+            // Trocar mono/bi/trifásico também invalida os inversores já
+            // selecionados (mesmo motivo do handler de concessionária acima).
+            selectedInversors = [];
+            renderSelectedInversors();
+            updateInversorOptions();
+            clearResults();
+        });
+
+        configOrla.addEventListener('change', function() {
+            if (selectedInversors.length > 0) {
+                calculateDimensionamento();
+            }
+        });
+
+        inversorSearch.addEventListener('input', function() {
+            updateInversorOptions();
+        });
+
+        addInversorBtn.addEventListener('click', function() {
+            const selectedInversorValue = inversorSelect.value;
+            if (selectedInversorValue) {
+                const inversor = JSON.parse(selectedInversorValue);
+                
+                // Verificar compatibilidade para rede monofásica/bifásica
+                const cfgVal = configTensao.value;
+                const isMono = cfgVal.includes('MONOFASICO') || cfgVal === 'MONOFASICO';
+                const isBif = cfgVal.includes('BIFASICO') || cfgVal === 'BIFASICO';
+                if ((isMono || isBif) && inversor.classe === 'TRIFÁSICO') {
+                    alert('Inversor trifásico não pode ser conectado em rede monofásica/bifásica');
+                    return;
+                }
+                
+                addInversor(inversor);
+                inversorSelect.value = '';
+                calculateDimensionamento();
+            }
+        });
+
+        document.getElementById('cargaInstaladaInput').addEventListener('input', function() {
+            if (selectedInversors.length > 0) {
+                calculateDimensionamento();
+            }
+        });
+
+        // Remove acentos e caixa para permitir busca por nome mais tolerante
+        function normalizarBusca(texto) {
+            return (texto || '')
+                .toString()
+                .normalize('NFD')
+                .replace(new RegExp('[\\u0300-\\u036f]', 'g'), '')
+                .toLowerCase()
+                .trim();
+        }
+
+        // Função para atualizar opções de inversores CORRIGIDA
+        function updateInversorOptions() {
+            const config = configTensao.value;
+            const concessionaria = concessionariaSelect.value;
+            const termoBusca = normalizarBusca(inversorSearch.value);
+
+            inversorSelect.innerHTML = '<option value="">-- Selecione --</option>';
+            inversorSelect.size = 1;
+
+            if (!concessionaria || !config) return;
+
+            // Determinar se é mono ou trifásico pelo prefixo do config value
+            const isMono = config.includes('MONOFASICO') || config === 'MONOFASICO';
+            const isTrif = config.includes('TRIFASICO') || config === 'TRIFASICO';
+            const isBif = config.includes('BIFASICO') || config === 'BIFASICO';
+
+            let filteredInversors = [];
+
+            if (isMono) {
+                filteredInversors = bancoDeDados.filter(inv => inv.classe === "MONOFÁSICO");
+            } else if (isBif) {
+                // Bifásico: mostra monofásicos (pois bifásico é 2 fases de monofásico)
+                filteredInversors = bancoDeDados.filter(inv => inv.classe === "MONOFÁSICO");
+            } else {
+                // Trifásico: mostra tanto trifásicos quanto monofásicos
+                filteredInversors = bancoDeDados.filter(inv =>
+                    inv.classe === "TRIFÁSICO" || inv.classe === "MONOFÁSICO"
+                );
+            }
+
+            if (termoBusca) {
+                // Cada palavra digitada precisa aparecer no nome (em qualquer posição),
+                // então "huawei 15k" acha "HUAWEI - SUN2000-15K-MB0" mesmo sem bater
+                // caractere por caractere com o nome completo.
+                const palavras = termoBusca.split(/\s+/).filter(Boolean);
+                filteredInversors = filteredInversors.filter(inv => {
+                    const nomeNormalizado = normalizarBusca(inv.inversor);
+                    return palavras.every(palavra => nomeNormalizado.includes(palavra));
+                });
+            }
+
+            filteredInversors.forEach(inv => {
+                const option = document.createElement('option');
+                option.value = JSON.stringify(inv);
+                option.textContent = `${inv.inversor} (${inv.potencia}kW - ${inv.corrente}A - ${inv.classe})`;
+                inversorSelect.appendChild(option);
+            });
+
+            // Enquanto o usuário busca, expande o select para parecer uma lista
+            // de resultados (em vez de um combo fechado), até um limite razoável.
+            if (termoBusca) {
+                inversorSelect.size = Math.min(filteredInversors.length + 1, 8);
+            }
+        }
+
+        // Função para adicionar inversor à lista (AGORA PERMITE MÚLTIPLOS)
+        function addInversor(inversor) {
+            // Criar ID único para cada inversor (permite múltiplos do mesmo tipo)
+            const inversorComId = {
+                ...inversor,
+                id: Date.now() + Math.random() // ID único
+            };
+            selectedInversors.push(inversorComId);
+            renderSelectedInversors();
+        }
+
+        // Função para renderizar inversores selecionados
+        function renderSelectedInversors() {
+            selectedInversorsDiv.innerHTML = '';
+            selectedInversors.forEach((inversor, index) => {
+                const div = document.createElement('div');
+                div.className = 'selected-inversor';
+                div.innerHTML = `
+                    <span>${inversor.inversor} (${inversor.potencia}kW - ${inversor.corrente}A)</span>
+                    <button onclick="removeInversor(${index})">Remover</button>
+                `;
+                selectedInversorsDiv.appendChild(div);
+            });
+        }
+
+        // Função para remover inversor
+        window.removeInversor = function(index) {
+            selectedInversors.splice(index, 1);
+            renderSelectedInversors();
+            calculateDimensionamento();
+        }
+
+        // Função para calcular o dimensionamento
+        function calculateDimensionamento() {
+            const concessionaria = concessionariaSelect.value;
+            const config = configTensao.value;
+            const configOrlaValue = configOrla.value;
+            const cargaInstaladaVal = parseFloat(document.getElementById('cargaInstaladaInput').value) || 0;
+
+            if (!concessionaria || !config || selectedInversors.length === 0) {
+                clearResults();
+                return;
+            }
+
+            // Calcular totais
+            const quantidade = selectedInversors.length;
+            const correnteTotal = selectedInversors.reduce((sum, inv) => sum + inv.corrente, 0);
+            const potenciaTotal = selectedInversors.reduce((sum, inv) => sum + inv.potencia, 0);
+
+            // Base do dimensionamento: maior entre potência dos inversores e carga instalada
+            const potenciaBase = Math.max(potenciaTotal, cargaInstaladaVal);
+            const usouCargaInstalada = cargaInstaladaVal > potenciaTotal;
+
+            // Mostrar resultados auxiliares de carga instalada
+            if (cargaInstaladaVal > 0) {
+                document.getElementById('cargaInstaladaResultItem').style.display = 'flex';
+                document.getElementById('baseDimensionamentoItem').style.display = 'flex';
+                document.getElementById('cargaInstaladaResult').textContent = `${cargaInstaladaVal.toFixed(2)}kW`;
+                document.getElementById('baseDimensionamento').textContent = usouCargaInstalada
+                    ? `${potenciaBase.toFixed(2)}kW (Carga Instalada é maior)`
+                    : `${potenciaBase.toFixed(2)}kW (Potência dos Inversores é maior)`;
+            } else {
+                document.getElementById('cargaInstaladaResultItem').style.display = 'none';
+                document.getElementById('baseDimensionamentoItem').style.display = 'none';
+            }
+
+            // Determinar classe inicial baseada na potência base
+            let classe = determinarClasse(concessionaria, config, potenciaBase);
+            let classeOriginal = classe;
+            let ajusteRealizado = false;
+
+            // Ajustar classe baseada na corrente, se necessário
+            if (classe) {
+                const classeAjustada = ajustarClassePorCorrente(concessionaria, config, classe, correnteTotal);
+                if (classeAjustada && classeAjustada !== classe) {
+                    classe = classeAjustada;
+                    ajusteRealizado = true;
+                }
+            }
+
+            // Obter configuração da classe
+            let configClasse = null;
+            if (classe && dimensionamento[concessionaria] && dimensionamento[concessionaria][classe]) {
+                const classeData = dimensionamento[concessionaria][classe];
+                // Tentar obter config pelo config exato, ou pelo primeiro disponível
+                if (classeData[config]) {
+                    configClasse = {...classeData[config]};
+                } else {
+                    // fallback: pega a primeira config disponível
+                    const firstKey = Object.keys(classeData)[0];
+                    configClasse = firstKey ? {...classeData[firstKey]} : null;
+                }
+                
+                // Ajustar para Equatorial baseado na orla
+                if (concessionaria === 'EQUATORIAL') {
+                    const configOrlaData = configEquatorialOrla[configOrlaValue];
+                    if (configOrlaData && configOrlaData[classe]) {
+                        configClasse.cabo = configOrlaData[classe].cabo;
+                        configClasse.ramal = configOrlaData[classe].ramal;
+                    }
+                } else if (concessionaria === 'EQUATORIAL_AP_PA_RS') {
+                    const configOrlaData = configEquatorialApPaRsOrla[configOrlaValue];
+                    if (configOrlaData && configOrlaData[classe]) {
+                        configClasse.cabo = configOrlaData[classe].cabo;
+                        configClasse.ramal = configOrlaData[classe].ramal;
+                    }
+                }
+            }
+
+            // Exibir resultados
+            document.getElementById('quantidade').textContent = quantidade;
+            document.getElementById('corrente').textContent = `${correnteTotal.toFixed(2)}A`;
+            document.getElementById('potenciaTotal').textContent = `${potenciaTotal.toFixed(2)}kW`;
+
+            if (configClasse) {
+                document.getElementById('disjuntor').textContent = configClasse.disjuntor;
+                document.getElementById('cabos').textContent = configClasse.ramal;
+                
+                // Exibir informações da concessionária
+                document.getElementById('infoConcessionariaNome').textContent = concessionariaSelect.options[concessionariaSelect.selectedIndex].text;
+                document.getElementById('infoDisjuntor').textContent = configClasse.disjuntor;
+                document.getElementById('infoCabo').textContent = configClasse.cabo;
+                document.getElementById('infoRamal').textContent = configClasse.ramal;
+                document.getElementById('infoTipo').textContent = configClasse.tipo;
+                
+                concessionariaInfoDiv.className = `concessionaria-info ${concessionaria.toLowerCase()}`;
+                concessionariaInfoDiv.style.display = 'block';
+            } else {
+                document.getElementById('disjuntor').textContent = 'Não disponível';
+                document.getElementById('cabos').textContent = 'Não disponível';
+                concessionariaInfoDiv.style.display = 'none';
+            }
+
+            // Exibir informações de demanda
+            if (classe) {
+                const faixas = classesDemanda[concessionaria][config];
+                if (faixas) {
+                    const faixa = faixas.find(f => f.classe === classe);
+                    const pdClasse = obterPDClasse(concessionaria, config, classe);
+                    const cargaMinima = calcularCargaMinima(potenciaBase, faixa);
+                    
+                    document.getElementById('faixaDemanda').textContent = `${faixa.min}kW - ${faixa.max}kW`;
+                    document.getElementById('classeSistema').textContent = classe;
+                    document.getElementById('potenciaDisponibilizada').textContent = `${pdClasse}kW`;
+                    
+                    const dentroDaPD = potenciaBase <= pdClasse;
+                    document.getElementById('statusPotencia').innerHTML = dentroDaPD ? 
+                        '<span style="color: green;">✅ Dentro do limite da PD</span>' : 
+                        '<span style="color: red;">❌ Excede a PD</span>';
+                    
+                    document.getElementById('cargaMinima').innerHTML = `
+                        ${cargaMinima}kW
+                        ${ajusteRealizado ? `<br><small style="color: #e67e22;">(Ajustada para atender a base de dimensionamento)</small>` : ''}
+                    `;
+
+                    cargaNecessariaInfo.style.display = 'block';
+                    if (potenciaBase > pdClasse) {
+                        cargaNecessariaInfo.className = 'error';
+                        document.getElementById('cargaNecessariaText').innerHTML =
+                            `A base de dimensionamento (<strong>${potenciaBase.toFixed(2)}kW</strong>) excede a PD da classe <strong>${classe}</strong>
+                            (<strong>${pdClasse}kW</strong>). Considere reduzir a potência ou alterar a classe.`;
+                    } else if (ajusteRealizado) {
+                        cargaNecessariaInfo.className = 'warning';
+                        document.getElementById('cargaNecessariaText').innerHTML = 
+                            `Para a classe <strong>${classe}</strong> a carga instalada deve ser de <strong>${cargaMinima}kW a ${faixa.max}kW</strong>. 
+                            <br><small>💡 <strong>Importante:</strong> A carga instalada (${cargaMinima}kW) deve ser ≥ à base de dimensionamento (${potenciaBase.toFixed(2)}kW)</small>`;
+                    } else {
+                        cargaNecessariaInfo.className = 'success';
+                        document.getElementById('cargaNecessariaText').innerHTML = 
+                            `Sistema adequado para a classe <strong>${classe}</strong>. 
+                            Base: <strong>${potenciaBase.toFixed(2)}kW</strong> | PD: <strong>${pdClasse}kW</strong> | 
+                            Carga mínima: <strong>${cargaMinima}kW</strong>`;
+                    }
+                    
+                    demandaInfoDiv.style.display = 'block';
+                } else {
+                    demandaInfoDiv.style.display = 'none';
+                    cargaNecessariaInfo.style.display = 'none';
+                }
+            } else {
+                demandaInfoDiv.style.display = 'none';
+                cargaNecessariaInfo.style.display = 'none';
+            }
+
+            // Exibir mensagem de ajuste automático, se aplicável
+            if (ajusteRealizado) {
+                autoAdjustMessage.style.display = 'block';
+                document.getElementById('adjustmentDetails').innerHTML = 
+                    `A classe foi ajustada de <strong>${classeOriginal}</strong> para <strong>${classe}</strong> 
+                    devido à corrente total de <strong>${correnteTotal.toFixed(2)}A</strong>.`;
+            } else {
+                autoAdjustMessage.style.display = 'none';
+            }
+
+            resultsDiv.style.display = 'block';
+
+            // Exibir informações de proteção individual dos inversores
+            renderProtecaoIndividual();
+        }
+
+        // Função para renderizar proteção individual CORRIGIDA
+        function renderProtecaoIndividual() {
+            const container = document.getElementById('detalhesProtecaoInversores');
+            container.innerHTML = '';
+
+            selectedInversors.forEach((inversor, index) => {
+                const div = document.createElement('div');
+                div.className = 'protecao-individual';
+                
+                // Calcular disjuntor individual CORRETO
+                const disjuntorIndividual = calcularDisjuntor(inversor.corrente);
+                const cabosIndividual = calcularCabosInversor(disjuntorIndividual, inversor.classe);
+                
+                div.innerHTML = `
+                    <h5>Inversor ${index + 1}: ${inversor.inversor}</h5>
+                    <div class="inversor-detail-item">
+                        <span class="detail-label">Potência:</span>
+                        <span class="detail-value">${inversor.potencia}kW</span>
+                    </div>
+                    <div class="inversor-detail-item">
+                        <span class="detail-label">Corrente Máxima:</span>
+                        <span class="detail-value">${inversor.corrente}A</span>
+                    </div>
+                    <div class="inversor-detail-item">
+                        <span class="detail-label">Disjuntor Individual:</span>
+                        <span class="detail-value">${disjuntorIndividual}A (Curva C)</span>
+                    </div>
+                    <div class="inversor-detail-item">
+                        <span class="detail-label">Cabo Individual:</span>
+                        <span class="detail-value">${cabosIndividual}</span>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            protecaoInversoresDiv.style.display = 'block';
+        }
+
+        // Função para limpar resultados
+        function clearResults() {
+            resultsDiv.style.display = 'none';
+            demandaInfoDiv.style.display = 'none';
+            concessionariaInfoDiv.style.display = 'none';
+            protecaoInversoresDiv.style.display = 'none';
+            cargaNecessariaInfo.style.display = 'none';
+            autoAdjustMessage.style.display = 'none';
+        }
+
+        // Inicialização
+        carregarBancoDeDados().then(() => updateInversorOptions());
+    </script>
+</body>
+</html>
