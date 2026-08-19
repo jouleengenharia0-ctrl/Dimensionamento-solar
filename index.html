@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -129,6 +129,7 @@
         .equatorial { background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%); color: white; border-left-color: #8e44ad; }
         .cemig { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border-left-color: #d35400; }
         .coelba { background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; border-left-color: #0e8a72; }
+        .enel_ce { background: linear-gradient(135deg, #e84393 0%, #c2185b 100%); color: white; border-left-color: #8e0e46; }
 
         .concessionaria-item {
             display: flex;
@@ -335,6 +336,7 @@
                         <option value="EQUATORIAL_AP_PA_RS">Equatorial AP/PA/RS (220/127V)</option>
                         <option value="CEMIG">CEMIG (MG)</option>
                         <option value="COELBA">COELBA (BA)</option>
+                        <option value="ENEL_CE">Enel CE</option>
                     </select>
                 </div>
 
@@ -365,6 +367,18 @@
                     ⚠️ Inversor trifásico só pode ser conectado em rede trifásica
                 </div>
             </div>
+
+            <!-- Configuração específica para microinversores em rede monofásica (CELPE/COSERN) -->
+            <div class="form-group" id="microProtecaoGroup" style="display: none;">
+                <label for="microProtecaoTipo">🔀 Proteção dos Microinversores:</label>
+                <select id="microProtecaoTipo">
+                    <option value="individual">Um disjuntor individual para cada microinversor</option>
+                    <option value="unico">Um disjuntor único para todos os microinversores</option>
+                </select>
+            </div>
+
+            <!-- Informação de balanceamento de fases para microinversores em rede trifásica -->
+            <div id="microFaseInfo" style="display: none;"></div>
 
             <!-- Configuração específica para Equatorial -->
             <div class="form-group" id="configOrlaGroup" style="display: none;">
@@ -433,6 +447,8 @@
                     <span class="result-value highlight" id="cabos">-</span>
                 </div>
             </div>
+
+            <div class="error" id="semClasseAviso" style="display: none;"></div>
 
             <div class="demanda-info" id="demandaInfo" style="display: none;">
                 <h4>📊 Requisitos de Carga/Demanda</h4>
@@ -636,6 +652,26 @@
                     {min: 40.1, max: 52, classe: "T10", pd: 52},
                     {min: 52.1, max: 66, classe: "T11", pd: 66},
                     {min: 66.1, max: 75, classe: "T12", pd: 75}
+                ]
+            },
+            // Anexo F - Dimensionamento da Entrada de Serviço - Rede Aérea 220/380V (Enel CE)
+            "ENEL_CE": {
+                "MONOFASICO": [
+                    {min: 0, max: 5, classe: "A1", pd: 5},
+                    {min: 5.1, max: 8, classe: "A2", pd: 8},
+                    {min: 8.1, max: 10, classe: "A3", pd: 10}
+                ],
+                "BIFASICO": [
+                    {min: 10.1, max: 20, classe: "B1", pd: 20}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 19, classe: "C1", pd: 19},
+                    {min: 19.1, max: 21, classe: "C2", pd: 21},
+                    {min: 21.1, max: 27, classe: "C3", pd: 27},
+                    {min: 30.1, max: 37, classe: "C4", pd: 37},
+                    {min: 37.1, max: 47, classe: "C5", pd: 47},
+                    {min: 47.1, max: 60, classe: "C6", pd: 60},
+                    {min: 60.1, max: 75, classe: "C7", pd: 75}
                 ]
             }
         };
@@ -1183,6 +1219,96 @@
                         tipo: "CATEGORIA T12 - Trifásico 220/380V"
                     }
                 }
+            },
+            "ENEL_CE": {
+                "A1": {
+                    "MONOFASICO": {
+                        disjuntor: "20A MONOPOLAR CURVA C",
+                        cabo: "6mm² CU",
+                        ramal: "Ramal de conexão 6+6mm² CU - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA A1 - Monofásico 220/380V (até 5kW)"
+                    }
+                },
+                "A2": {
+                    "MONOFASICO": {
+                        disjuntor: "32A MONOPOLAR CURVA C",
+                        cabo: "6mm² CU",
+                        ramal: "Ramal de conexão 6+6mm² CU - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA A2 - Monofásico 220/380V (5,1 a 8kW)"
+                    }
+                },
+                "A3": {
+                    "MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "10mm² CU",
+                        ramal: "Ramal de conexão 10+10mm² CU - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA A3 - Monofásico 220/380V (8,1 a 10kW)"
+                    }
+                },
+                "B1": {
+                    "BIFASICO": {
+                        disjuntor: "50A BIPOLAR CURVA C",
+                        cabo: "16mm² CU",
+                        ramal: "Ramal de conexão 2x16+16mm² CU - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA B1 - Bifásico 220/380V (10,1 a 20kW)"
+                    }
+                },
+                "C1": {
+                    "TRIFASICO": {
+                        disjuntor: "25A TRIPOLAR CURVA C",
+                        cabo: "6mm² CU",
+                        ramal: "Ramal de conexão 3x6+6mm² CU - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA C1 - Trifásico 220/380V"
+                    }
+                },
+                "C2": {
+                    "TRIFASICO": {
+                        disjuntor: "32A TRIPOLAR CURVA C",
+                        cabo: "10mm² CU",
+                        ramal: "Ramal de conexão 3x10+10mm² CU - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA C2 - Trifásico 220/380V (19,1 a 21kW)"
+                    }
+                },
+                "C3": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "10mm² CU",
+                        ramal: "Ramal de conexão 3x10+10mm² CU - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA C3 - Trifásico 220/380V (21,1 a 27kW)"
+                    }
+                },
+                "C4": {
+                    "TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "16mm² CU",
+                        ramal: "Ramal de entrada 3x16+16mm² CU - Ponto de conexão: Poste (instalação por conta do consumidor)",
+                        tipo: "CATEGORIA C4 - Trifásico 220/380V (30,1 a 37kW)"
+                    }
+                },
+                "C5": {
+                    "TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² CU",
+                        ramal: "Ramal de entrada 3x16+16mm² CU - Ponto de conexão: Poste (instalação por conta do consumidor)",
+                        tipo: "CATEGORIA C5 - Trifásico 220/380V (37,1 a 47kW)"
+                    }
+                },
+                "C6": {
+                    "TRIFASICO": {
+                        disjuntor: "80A TRIPOLAR CURVA C",
+                        cabo: "25mm² CU",
+                        ramal: "Ramal de entrada 3x35+54,5mm² CU - Ponto de conexão: Poste (instalação por conta do consumidor)",
+                        tipo: "CATEGORIA C6 - Trifásico 220/380V (47,1 a 60kW)"
+                    }
+                },
+                "C7": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² CU",
+                        ramal: "Ramal de entrada 3x35+54,5mm² CU - Ponto de conexão: Poste (instalação por conta do consumidor)",
+                        tipo: "CATEGORIA C7 - Trifásico 220/380V (60,1 a 75kW)"
+                    }
+                }
             }
         };
 
@@ -1322,11 +1448,21 @@
 
             if (indiceAtual === -1) return classeInicial;
 
-            // Verificar se a corrente excede o disjuntor da classe atual
+            // O disjuntor do padrão de entrada nunca pode ser menor que o
+            // disjuntor "solar" — o disjuntor comercial padronizado que
+            // protege a saída do(s) inversor(es), já arredondado pra cima
+            // pro tamanho comercial mais próximo (ex: 40,2A vira 50A).
+            // Comparar direto pela corrente crua deixaria passar casos onde
+            // a corrente cabe no limite da classe (ex: 39,5A <= 40A) mas o
+            // disjuntor comercial arredondado (50A) já não cabe mais.
+            const disjuntorSolar = calcularDisjuntor(correnteTotal);
+            if (typeof disjuntorSolar !== 'number') return null;
+
+            // Verificar se o disjuntor solar excede o disjuntor da classe atual
             const classeAtual = dimensionamento[concessionaria][classeInicial][configTensao];
             const correnteDisjuntorAtual = extrairValorDisjuntor(classeAtual.disjuntor);
 
-            if (correnteTotal <= correnteDisjuntorAtual) {
+            if (disjuntorSolar <= correnteDisjuntorAtual) {
                 return classeInicial; // Não precisa ajustar
             }
 
@@ -1336,7 +1472,7 @@
                 const configClasse = dimensionamento[concessionaria][classeCandidata][configTensao];
                 const correnteDisjuntorCandidato = extrairValorDisjuntor(configClasse.disjuntor);
 
-                if (correnteTotal <= correnteDisjuntorCandidato) {
+                if (disjuntorSolar <= correnteDisjuntorCandidato) {
                     return classeCandidata;
                 }
             }
@@ -1356,6 +1492,14 @@
                 }
             }
             return 0;
+        }
+
+        // Nome amigável de uma chave de configuração de tensão (ex: "220_380_TRIFASICO" -> "Trifásico")
+        function nomeConfigAmigavel(config) {
+            if (config.includes('TRIFASICO')) return 'Trifásico';
+            if (config.includes('BIFASICO')) return 'Bifásico';
+            if (config.includes('MONOFASICO')) return 'Monofásico';
+            return config;
         }
 
         // Função para calcular carga mínima necessária CORRIGIDA
@@ -1384,6 +1528,61 @@
         const protecaoInversoresDiv = document.getElementById('protecaoInversores');
         const cargaNecessariaInfo = document.getElementById('cargaNecessariaInfo');
         const autoAdjustMessage = document.getElementById('autoAdjustMessage');
+        const microProtecaoGroup = document.getElementById('microProtecaoGroup');
+        const microProtecaoTipo = document.getElementById('microProtecaoTipo');
+        const microFaseInfo = document.getElementById('microFaseInfo');
+
+        // Estado da proteção escolhida para microinversores em rede monofásica
+        let tipoProtecaoMicro = 'individual';
+
+        microProtecaoTipo.addEventListener('change', function() {
+            tipoProtecaoMicro = this.value;
+            renderProtecaoIndividual();
+        });
+
+        // Mostra/esconde os painéis específicos de microinversores (proteção
+        // única/individual no monofásico da CELPE/COSERN, e o aviso de
+        // balanceamento de fases no trifásico) de acordo com a seleção atual.
+        function atualizarPainelMicros() {
+            const concessionaria = concessionariaSelect.value;
+            const config = configTensao.value;
+            const isMono = config.includes('MONOFASICO') || config === 'MONOFASICO';
+            const isTrif = config.includes('TRIFASICO') || config === 'TRIFASICO';
+
+            const micros = selectedInversors.filter(inv => inv.categoria === 'MICRO');
+            const microsMonofasicos = micros.filter(inv => inv.classe === 'MONOFÁSICO');
+
+            // Escolha de disjuntor único x individual: só faz sentido para
+            // CELPE/COSERN em rede monofásica com 2+ microinversores.
+            if (concessionaria === 'CELPE' && isMono && micros.length >= 2) {
+                microProtecaoGroup.style.display = 'block';
+            } else {
+                microProtecaoGroup.style.display = 'none';
+                microProtecaoTipo.value = 'individual';
+                tipoProtecaoMicro = 'individual';
+            }
+
+            // Balanceamento de fases: aplica-se a qualquer concessionária,
+            // pois é uma restrição elétrica (rede trifásica com 3 fases),
+            // não uma regra específica de uma distribuidora.
+            if (isTrif && microsMonofasicos.length >= 1) {
+                const total = microsMonofasicos.length;
+                const resto = total % 3;
+                microFaseInfo.style.display = 'block';
+                if (resto === 0) {
+                    microFaseInfo.className = 'success';
+                    microFaseInfo.innerHTML = `⚖️ <strong>${total} microinversor(es) balanceado(s):</strong> ${total / 3} por fase (Fase A, Fase B e Fase C).`;
+                } else {
+                    microFaseInfo.className = 'warning';
+                    const paraCompletar = 3 - resto;
+                    const paraReduzir = resto;
+                    microFaseInfo.innerHTML = `⚠️ <strong>${total} microinversor(es) não formam um conjunto balanceado nas 3 fases.</strong>
+                        Adicione mais ${paraCompletar} (total ${total + paraCompletar}) ou remova ${paraReduzir} (total ${total - paraReduzir}) para balancear as fases.`;
+                }
+            } else {
+                microFaseInfo.style.display = 'none';
+            }
+        }
 
         // Event Listeners
         concessionariaSelect.addEventListener('change', function() {
@@ -1410,6 +1609,13 @@
                 const tensaoSel = document.getElementById('configTensao');
                 const rede = document.getElementById('configRedeCoelba').value;
                 updateCoelbaTensaoOptions(rede);
+            } else if (concessionaria === 'ENEL_CE') {
+                const tensaoSel = document.getElementById('configTensao');
+                tensaoSel.innerHTML = `
+                    <option value="MONOFASICO">Monofásico (220/380V)</option>
+                    <option value="BIFASICO">Bifásico (220/380V)</option>
+                    <option value="TRIFASICO">Trifásico (220/380V)</option>
+                `;
             } else {
                 const tensaoSel = document.getElementById('configTensao');
                 tensaoSel.innerHTML = `
@@ -1541,7 +1747,8 @@
             filteredInversors.forEach(inv => {
                 const option = document.createElement('option');
                 option.value = JSON.stringify(inv);
-                option.textContent = `${inv.inversor} (${inv.potencia}kW - ${inv.corrente}A - ${inv.classe})`;
+                const tagMicro = inv.categoria === 'MICRO' ? ' - MICRO' : '';
+                option.textContent = `${inv.inversor} (${inv.potencia}kW - ${inv.corrente}A - ${inv.classe}${tagMicro})`;
                 inversorSelect.appendChild(option);
             });
 
@@ -1569,8 +1776,9 @@
             selectedInversors.forEach((inversor, index) => {
                 const div = document.createElement('div');
                 div.className = 'selected-inversor';
+                const tagMicro = inversor.categoria === 'MICRO' ? ' ⚡MICRO' : '';
                 div.innerHTML = `
-                    <span>${inversor.inversor} (${inversor.potencia}kW - ${inversor.corrente}A)</span>
+                    <span>${inversor.inversor}${tagMicro} (${inversor.potencia}kW - ${inversor.corrente}A)</span>
                     <button onclick="removeInversor(${index})">Remover</button>
                 `;
                 selectedInversorsDiv.appendChild(div);
@@ -1590,6 +1798,8 @@
             const config = configTensao.value;
             const configOrlaValue = configOrla.value;
             const cargaInstaladaVal = parseFloat(document.getElementById('cargaInstaladaInput').value) || 0;
+
+            atualizarPainelMicros();
 
             if (!concessionaria || !config || selectedInversors.length === 0) {
                 clearResults();
@@ -1622,14 +1832,43 @@
             let classe = determinarClasse(concessionaria, config, potenciaBase);
             let classeOriginal = classe;
             let ajusteRealizado = false;
+            let semClasseAdequada = false;
 
             // Ajustar classe baseada na corrente, se necessário
             if (classe) {
                 const classeAjustada = ajustarClassePorCorrente(concessionaria, config, classe, correnteTotal);
-                if (classeAjustada && classeAjustada !== classe) {
+                if (classeAjustada === null) {
+                    // Nenhuma classe desta configuração (mono/bi/tri) tem disjuntor
+                    // suficiente para a corrente total — não dá pra "forçar" uma
+                    // classe insuficiente, então sinaliza e não define disjuntor.
+                    semClasseAdequada = true;
+                    classe = null;
+                } else if (classeAjustada !== classe) {
                     classe = classeAjustada;
                     ajusteRealizado = true;
                 }
+            }
+
+            const semClasseAvisoDiv = document.getElementById('semClasseAviso');
+            if (semClasseAdequada) {
+                const faixasConfig = classesDemanda[concessionaria][config];
+                const ultimaFaixa = faixasConfig[faixasConfig.length - 1];
+                const ultimaClasseInfo = dimensionamento[concessionaria][ultimaFaixa.classe][config];
+                const nomeConfigAtual = nomeConfigAmigavel(config);
+                const disjuntorSolarNecessario = calcularDisjuntor(correnteTotal);
+                const outrasConfigs = Object.keys(classesDemanda[concessionaria])
+                    .filter(cfg => cfg !== config)
+                    .map(nomeConfigAmigavel);
+                const sugestao = outrasConfigs.length > 0
+                    ? `Troque a configuração de entrada para ${outrasConfigs.join(' ou ')}.`
+                    : 'Reduza a quantidade/potência dos inversores selecionados.';
+
+                semClasseAvisoDiv.innerHTML = `❌ O disjuntor solar necessário para a corrente total (<strong>${correnteTotal.toFixed(2)}A</strong>) é de <strong>${disjuntorSolarNecessario}A</strong>,
+                    mas o maior disjuntor de padrão disponível para <strong>${nomeConfigAtual}</strong> nesta concessionária é de <strong>${ultimaClasseInfo.disjuntor}</strong>
+                    (categoria <strong>${ultimaFaixa.classe}</strong>, até ${ultimaFaixa.max}kW). O disjuntor do padrão não pode ser menor que o disjuntor solar. ${sugestao}`;
+                semClasseAvisoDiv.style.display = 'block';
+            } else {
+                semClasseAvisoDiv.style.display = 'none';
             }
 
             // Obter configuração da classe
@@ -1757,16 +1996,25 @@
             const container = document.getElementById('detalhesProtecaoInversores');
             container.innerHTML = '';
 
-            selectedInversors.forEach((inversor, index) => {
+            const config = configTensao.value;
+            const isTrif = config.includes('TRIFASICO') || config === 'TRIFASICO';
+            const usaProtecaoUnicaMicros = microProtecaoGroup.style.display !== 'none' && tipoProtecaoMicro === 'unico';
+
+            // Sequência de fases usada só para rotular (informativamente) em qual
+            // fase cada microinversor monofásico cairia numa rede trifásica.
+            const fases = ['Fase A', 'Fase B', 'Fase C'];
+            let contadorFaseMicro = 0;
+
+            function renderCard(inversor, numero, extraLabel) {
                 const div = document.createElement('div');
                 div.className = 'protecao-individual';
-                
-                // Calcular disjuntor individual CORRETO
+
                 const disjuntorIndividual = calcularDisjuntor(inversor.corrente);
                 const cabosIndividual = calcularCabosInversor(disjuntorIndividual, inversor.classe);
-                
+                const tagMicro = inversor.categoria === 'MICRO' ? ' ⚡ (Microinversor)' : '';
+
                 div.innerHTML = `
-                    <h5>Inversor ${index + 1}: ${inversor.inversor}</h5>
+                    <h5>Inversor ${numero}: ${inversor.inversor}${tagMicro}</h5>
                     <div class="inversor-detail-item">
                         <span class="detail-label">Potência:</span>
                         <span class="detail-value">${inversor.potencia}kW</span>
@@ -1775,6 +2023,11 @@
                         <span class="detail-label">Corrente Máxima:</span>
                         <span class="detail-value">${inversor.corrente}A</span>
                     </div>
+                    ${extraLabel ? `
+                    <div class="inversor-detail-item">
+                        <span class="detail-label">Fase:</span>
+                        <span class="detail-value">${extraLabel}</span>
+                    </div>` : ''}
                     <div class="inversor-detail-item">
                         <span class="detail-label">Disjuntor Individual:</span>
                         <span class="detail-value">${disjuntorIndividual}A (Curva C)</span>
@@ -1785,7 +2038,56 @@
                     </div>
                 `;
                 container.appendChild(div);
+            }
+
+            selectedInversors.forEach((inversor, index) => {
+                const isMicro = inversor.categoria === 'MICRO';
+
+                // Microinversores em modo de proteção única não recebem card
+                // individual: entram todos juntos no bloco combinado abaixo.
+                if (isMicro && usaProtecaoUnicaMicros) return;
+
+                let extraLabel = '';
+                if (isMicro && isTrif && inversor.classe === 'MONOFÁSICO') {
+                    extraLabel = fases[contadorFaseMicro % 3];
+                    contadorFaseMicro++;
+                }
+                renderCard(inversor, index + 1, extraLabel);
             });
+
+            // Bloco combinado: um único disjuntor dimensionado para a soma das
+            // correntes de todos os microinversores selecionados.
+            if (usaProtecaoUnicaMicros) {
+                const micros = selectedInversors.filter(inv => inv.categoria === 'MICRO');
+                if (micros.length > 0) {
+                    const correnteConjunta = micros.reduce((sum, inv) => sum + inv.corrente, 0);
+                    const disjuntorConjunto = calcularDisjuntor(correnteConjunta);
+                    const cabosConjunto = calcularCabosInversor(disjuntorConjunto, 'MONOFÁSICO');
+
+                    const div = document.createElement('div');
+                    div.className = 'protecao-individual';
+                    div.innerHTML = `
+                        <h5>⚡ Proteção Conjunta dos Microinversores (${micros.length} unidades)</h5>
+                        <div class="inversor-detail-item">
+                            <span class="detail-label">Microinversores:</span>
+                            <span class="detail-value">${micros.map(m => m.inversor).join(', ')}</span>
+                        </div>
+                        <div class="inversor-detail-item">
+                            <span class="detail-label">Corrente Total:</span>
+                            <span class="detail-value">${correnteConjunta.toFixed(2)}A</span>
+                        </div>
+                        <div class="inversor-detail-item">
+                            <span class="detail-label">Disjuntor Único:</span>
+                            <span class="detail-value">${disjuntorConjunto}A (Curva C)</span>
+                        </div>
+                        <div class="inversor-detail-item">
+                            <span class="detail-label">Cabo:</span>
+                            <span class="detail-value">${cabosConjunto}</span>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                }
+            }
 
             protecaoInversoresDiv.style.display = 'block';
         }
@@ -1798,6 +2100,8 @@
             protecaoInversoresDiv.style.display = 'none';
             cargaNecessariaInfo.style.display = 'none';
             autoAdjustMessage.style.display = 'none';
+            document.getElementById('semClasseAviso').style.display = 'none';
+            atualizarPainelMicros();
         }
 
         // Inicialização
