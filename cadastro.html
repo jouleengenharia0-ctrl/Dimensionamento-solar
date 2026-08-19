@@ -114,12 +114,21 @@
                         <input type="number" id="campoCorrente" step="0.01" min="0" placeholder="Ex: 40.2">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label for="campoClasse">Classe</label>
-                    <select id="campoClasse">
-                        <option value="MONOFÁSICO">Monofásico</option>
-                        <option value="TRIFÁSICO">Trifásico</option>
-                    </select>
+                <div class="config-group">
+                    <div class="form-group">
+                        <label for="campoClasse">Classe</label>
+                        <select id="campoClasse">
+                            <option value="MONOFÁSICO">Monofásico</option>
+                            <option value="TRIFÁSICO">Trifásico</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="campoCategoria">Categoria</label>
+                        <select id="campoCategoria">
+                            <option value="TRADICIONAL">Inversor Tradicional</option>
+                            <option value="MICRO">Microinversor</option>
+                        </select>
+                    </div>
                 </div>
                 <button id="btnSalvar">Salvar inversor</button>
 
@@ -131,7 +140,7 @@
                 <input type="text" id="buscaLista" class="busca-lista" placeholder="🔎 Filtrar lista...">
                 <table>
                     <thead>
-                        <tr><th>Inversor</th><th>Potência</th><th>Corrente</th><th>Classe</th><th></th></tr>
+                        <tr><th>Inversor</th><th>Potência</th><th>Corrente</th><th>Classe</th><th>Categoria</th><th></th></tr>
                     </thead>
                     <tbody id="corpoTabela"></tbody>
                 </table>
@@ -210,6 +219,7 @@
             const potencia = parseFloat(document.getElementById('campoPotencia').value);
             const corrente = parseFloat(document.getElementById('campoCorrente').value);
             const classe = document.getElementById('campoClasse').value;
+            const categoria = document.getElementById('campoCategoria').value;
 
             if (!nome || isNaN(potencia) || isNaN(corrente)) {
                 mostrarMsg('Preencha nome, potência e corrente corretamente.', 'erro');
@@ -218,7 +228,7 @@
 
             const slug = gerarSlug(nome);
             try {
-                await setDoc(doc(db, 'inversores', slug), { inversor: nome, potencia, corrente, classe });
+                await setDoc(doc(db, 'inversores', slug), { inversor: nome, potencia, corrente, classe, categoria });
                 mostrarMsg(`Inversor "${nome}" salvo com sucesso.`, 'sucesso');
                 document.getElementById('campoNome').value = '';
                 document.getElementById('campoPotencia').value = '';
@@ -243,11 +253,13 @@
             corpo.innerHTML = '';
             lista.forEach(inv => {
                 const tr = document.createElement('tr');
+                const categoria = inv.categoria || 'TRADICIONAL';
                 tr.innerHTML = `
                     <td>${inv.inversor}</td>
                     <td>${inv.potencia}kW</td>
                     <td>${inv.corrente}A</td>
                     <td>${inv.classe}</td>
+                    <td>${categoria === 'MICRO' ? '⚡ Micro' : 'Tradicional'}</td>
                     <td><button class="remover" data-id="${inv.id}">Remover</button></td>
                 `;
                 corpo.appendChild(tr);
