@@ -370,7 +370,7 @@
 
             <!-- Configuração específica para microinversores em rede monofásica (CELPE/COSERN) -->
             <div class="form-group" id="microProtecaoGroup" style="display: none;">
-                <label for="microProtecaoTipo">🔀 Proteção dos Microinversores:</label>
+                <label for="microProtecaoTipo" id="microProtecaoLabel">🔀 Proteção dos Microinversores:</label>
                 <select id="microProtecaoTipo">
                     <option value="individual">Um disjuntor individual para cada microinversor</option>
                     <option value="unico">Um disjuntor único para todos os microinversores</option>
@@ -426,6 +426,10 @@
                     <span class="result-label">⚡ Corrente Máxima Total:</span>
                     <span class="result-value" id="corrente">-</span>
                 </div>
+                <div class="result-item" id="correntePorFaseItem" style="display:none;">
+                    <span class="result-label">🔀 Corrente por Fase (A / B / C):</span>
+                    <span class="result-value" id="correntePorFase">-</span>
+                </div>
                 <div class="result-item">
                     <span class="result-label">🔋 Potência Total dos Inversores:</span>
                     <span class="result-value" id="potenciaTotal">-</span>
@@ -449,6 +453,8 @@
             </div>
 
             <div class="error" id="semClasseAviso" style="display: none;"></div>
+
+            <div id="potenciaFaseAviso" style="display: none;"></div>
 
             <div class="demanda-info" id="demandaInfo" style="display: none;">
                 <h4>📊 Requisitos de Carga/Demanda</h4>
@@ -1502,6 +1508,33 @@
             return config;
         }
 
+        // Distribui uma lista de inversores round-robin em 3 grupos (Fase A/B/C).
+        function distribuirPorFase(lista) {
+            const grupos = [[], [], []];
+            lista.forEach((inv, i) => grupos[i % 3].push(inv));
+            return grupos;
+        }
+
+        // Monta os 3 grupos de fase para os inversores MONOFÁSICOS selecionados
+        // (tradicionais e microinversores distribuídos em sequências separadas,
+        // já que na prática um instalador balanceia cada grupo de equipamento
+        // igual entre si, não intercala tipos diferentes arbitrariamente).
+        function distribuirMonofasicosPorFase(inversores) {
+            const micros = inversores.filter(inv => inv.classe === 'MONOFÁSICO' && inv.categoria === 'MICRO');
+            const tradicionais = inversores.filter(inv => inv.classe === 'MONOFÁSICO' && inv.categoria !== 'MICRO');
+            const gruposMicros = distribuirPorFase(micros);
+            const gruposTradicionais = distribuirPorFase(tradicionais);
+            return [0, 1, 2].map(i => [...gruposTradicionais[i], ...gruposMicros[i]]);
+        }
+
+        // Verifica se todos os microinversores de uma lista são do mesmo modelo
+        // (pré-requisito pra agrupar vários num único disjuntor/circuito).
+        function mesmoModeloMicros(lista) {
+            if (lista.length === 0) return true;
+            const nomeRef = lista[0].inversor;
+            return lista.every(inv => inv.inversor === nomeRef);
+        }
+
         // Função para calcular carga mínima necessária CORRIGIDA
         function calcularCargaMinima(potenciaTotal, faixa) {
             // A carga mínima deve ser a MAIOR entre a carga mínima da faixa e a potência dos inversores
@@ -1540,9 +1573,9 @@
             renderProtecaoIndividual();
         });
 
-        // Mostra/esconde os painéis específicos de microinversores (proteção
-        // única/individual no monofásico da CELPE/COSERN, e o aviso de
-        // balanceamento de fases no trifásico) de acordo com a seleção atual.
+        // Mostra/esconde os painéis específicos de microinversores: escolha de
+        // proteção única/individual/agrupada por fase, e o aviso de
+        // balanceamento de quantidade no trifásico. De acordo com a seleção atual.
         function atualizarPainelMicros() {
             const concessionaria = concessionariaSelect.value;
             const config = configTensao.value;
@@ -1552,17 +1585,45 @@
             const micros = selectedInversors.filter(inv => inv.categoria === 'MICRO');
             const microsMonofasicos = micros.filter(inv => inv.classe === 'MONOFÁSICO');
 
-            // Escolha de disjuntor único x individual: só faz sentido para
-            // CELPE/COSERN em rede monofásica com 2+ microinversores.
+            // Escolha de proteção: dois cenários possíveis, mutuamente exclusivos
+            // (config nunca é mono e trifásico ao mesmo tempo).
+            // 1) CELPE/COSERN em rede monofásica com 2+ micros: disjuntor único
+            //    para todos x individual para cada.
+            // 2) Rede trifásica com micros monofásicos em quantidade múltipla de
+            //    3 e todos do mesmo modelo: individual x agrupado por fase (N
+            //    micros por circuito, 3 circuitos) — só funciona com modelo
+            //    igual porque divide um disjuntor/condutor comum entre eles.
+            let modoDisponivel = null;
             if (concessionaria === 'CELPE' && isMono && micros.length >= 2) {
+                modoDisponivel = 'unico';
+                document.getElementById('microProtecaoLabel').textContent = '🔀 Proteção dos Microinversores:';
+                microProtecaoTipo.innerHTML = `
+                    <option value="individual">Um disjuntor individual para cada microinversor</option>
+                    <option value="unico">Um disjuntor único para todos os microinversores</option>
+                `;
+            } else if (isTrif && microsMonofasicos.length >= 3 && microsMonofasicos.length % 3 === 0 && mesmoModeloMicros(microsMonofasicos)) {
+                modoDisponivel = 'porFase';
+                const porFase = microsMonofasicos.length / 3;
+                document.getElementById('microProtecaoLabel').textContent = '🔀 Proteção dos Microinversores (Trifásico):';
+                microProtecaoTipo.innerHTML = `
+                    <option value="individual">Um disjuntor individual para cada microinversor</option>
+                    <option value="porFase">Agrupar por fase (${porFase} microinversores por circuito, 3 circuitos)</option>
+                `;
+            }
+
+            if (modoDisponivel) {
                 microProtecaoGroup.style.display = 'block';
+                if (tipoProtecaoMicro !== 'individual' && tipoProtecaoMicro !== modoDisponivel) {
+                    tipoProtecaoMicro = 'individual';
+                }
+                microProtecaoTipo.value = tipoProtecaoMicro;
             } else {
                 microProtecaoGroup.style.display = 'none';
                 microProtecaoTipo.value = 'individual';
                 tipoProtecaoMicro = 'individual';
             }
 
-            // Balanceamento de fases: aplica-se a qualquer concessionária,
+            // Balanceamento de quantidade: aplica-se a qualquer concessionária,
             // pois é uma restrição elétrica (rede trifásica com 3 fases),
             // não uma regra específica de uma distribuidora.
             if (isTrif && microsMonofasicos.length >= 1) {
@@ -1808,8 +1869,29 @@
 
             // Calcular totais
             const quantidade = selectedInversors.length;
-            const correnteTotal = selectedInversors.reduce((sum, inv) => sum + inv.corrente, 0);
             const potenciaTotal = selectedInversors.reduce((sum, inv) => sum + inv.potencia, 0);
+
+            const isTrifasicoRede = config.includes('TRIFASICO') || config === 'TRIFASICO';
+
+            // Em rede trifásica, inversores/microinversores MONOFÁSICOS ficam
+            // cada um numa fase — a corrente deles não soma entre fases, só
+            // dentro da mesma fase. Só o inversor TRIFÁSICO carrega as 3 fases
+            // ao mesmo tempo (soma cheio nas 3). O disjuntor tripolar do padrão
+            // tem que aguentar a fase mais carregada, não a soma de tudo.
+            const gruposFaseMono = distribuirMonofasicosPorFase(selectedInversors);
+            let correnteTotal;
+            let correntesPorFase = null;
+            if (isTrifasicoRede) {
+                const correnteTrifasicos = selectedInversors
+                    .filter(inv => inv.classe === 'TRIFÁSICO')
+                    .reduce((sum, inv) => sum + inv.corrente, 0);
+                correntesPorFase = gruposFaseMono.map(grupo =>
+                    correnteTrifasicos + grupo.reduce((sum, inv) => sum + inv.corrente, 0)
+                );
+                correnteTotal = Math.max(...correntesPorFase);
+            } else {
+                correnteTotal = selectedInversors.reduce((sum, inv) => sum + inv.corrente, 0);
+            }
 
             // Base do dimensionamento: maior entre potência dos inversores e carga instalada
             const potenciaBase = Math.max(potenciaTotal, cargaInstaladaVal);
@@ -1871,6 +1953,39 @@
                 semClasseAvisoDiv.style.display = 'none';
             }
 
+            // A PD (Potência Disponibilizada) da classe é do padrão inteiro
+            // (3 fases). Inversores/microinversores MONOFÁSICOS, por ficarem
+            // cada um numa fase só, não podem juntos (na fase mais carregada)
+            // passar de PD/3. Algumas concessionárias (CELPE/COSERN e COELBA)
+            // ainda limitam esse valor por fase a um teto fixo de 15kW, mesmo
+            // que PD/3 dê um número maior — nesse caso trocar de classe não
+            // aumenta o limite disponível.
+            const potenciaFaseAvisoDiv = document.getElementById('potenciaFaseAviso');
+            const totalMonofasicosNasFases = gruposFaseMono.reduce((sum, g) => sum + g.length, 0);
+            if (isTrifasicoRede && classe && totalMonofasicosNasFases > 0) {
+                const pdClasseAtual = obterPDClasse(concessionaria, config, classe);
+                const potenciasPorFaseMono = gruposFaseMono.map(g => g.reduce((sum, inv) => sum + inv.potencia, 0));
+                const potenciaMaxFaseMono = Math.max(...potenciasPorFaseMono);
+                const limiteBruto = pdClasseAtual / 3;
+                const temTeto = (concessionaria === 'CELPE' || concessionaria === 'COELBA');
+                const limite = temTeto ? Math.min(limiteBruto, 15) : limiteBruto;
+                const tetoAtingido = temTeto && limiteBruto > 15;
+
+                if (potenciaMaxFaseMono > limite) {
+                    potenciaFaseAvisoDiv.className = 'error';
+                    potenciaFaseAvisoDiv.innerHTML = `❌ A potência monofásica na fase mais carregada (<strong>${potenciaMaxFaseMono.toFixed(2)}kW</strong>) excede o limite disponível por fase
+                        (<strong>${limite.toFixed(2)}kW</strong> = PD da classe ${classe} [${pdClasseAtual}kW] ÷ 3${tetoAtingido ? ', limitado a 15kW nesta concessionária' : ''}).
+                        ${tetoAtingido
+                            ? ' Essa concessionária limita a potência monofásica por fase em 15kW — trocar de classe não aumenta esse limite; reduza a potência monofásica instalada por fase.'
+                            : ' Troque para uma classe com PD maior ou redistribua a potência entre as fases.'}`;
+                    potenciaFaseAvisoDiv.style.display = 'block';
+                } else {
+                    potenciaFaseAvisoDiv.style.display = 'none';
+                }
+            } else {
+                potenciaFaseAvisoDiv.style.display = 'none';
+            }
+
             // Obter configuração da classe
             let configClasse = null;
             if (classe && dimensionamento[concessionaria] && dimensionamento[concessionaria][classe]) {
@@ -1902,8 +2017,17 @@
 
             // Exibir resultados
             document.getElementById('quantidade').textContent = quantidade;
-            document.getElementById('corrente').textContent = `${correnteTotal.toFixed(2)}A`;
+            document.getElementById('corrente').textContent = `${correnteTotal.toFixed(2)}A${isTrifasicoRede ? ' (maior fase)' : ''}`;
             document.getElementById('potenciaTotal').textContent = `${potenciaTotal.toFixed(2)}kW`;
+
+            const correntePorFaseItem = document.getElementById('correntePorFaseItem');
+            if (isTrifasicoRede && correntesPorFase && gruposFaseMono.some(g => g.length > 0)) {
+                correntePorFaseItem.style.display = 'flex';
+                document.getElementById('correntePorFase').textContent =
+                    `${correntesPorFase[0].toFixed(2)}A / ${correntesPorFase[1].toFixed(2)}A / ${correntesPorFase[2].toFixed(2)}A`;
+            } else {
+                correntePorFaseItem.style.display = 'none';
+            }
 
             if (configClasse) {
                 document.getElementById('disjuntor').textContent = configClasse.disjuntor;
@@ -1999,11 +2123,19 @@
             const config = configTensao.value;
             const isTrif = config.includes('TRIFASICO') || config === 'TRIFASICO';
             const usaProtecaoUnicaMicros = microProtecaoGroup.style.display !== 'none' && tipoProtecaoMicro === 'unico';
+            const usaProtecaoPorFaseMicros = microProtecaoGroup.style.display !== 'none' && tipoProtecaoMicro === 'porFase';
 
-            // Sequência de fases usada só para rotular (informativamente) em qual
-            // fase cada microinversor monofásico cairia numa rede trifásica.
-            const fases = ['Fase A', 'Fase B', 'Fase C'];
-            let contadorFaseMicro = 0;
+            // Mapa id -> "Fase A/B/C" usado pra rotular (informativamente) em
+            // qual fase cada inversor/microinversor MONOFÁSICO cai numa rede
+            // trifásica — mesma distribuição usada pros cálculos de corrente e
+            // potência por fase, então o rótulo bate com o número exibido.
+            const nomesFase = ['Fase A', 'Fase B', 'Fase C'];
+            const faseDoInversor = new Map();
+            if (isTrif) {
+                distribuirMonofasicosPorFase(selectedInversors).forEach((grupo, i) => {
+                    grupo.forEach(inv => faseDoInversor.set(inv.id, nomesFase[i]));
+                });
+            }
 
             function renderCard(inversor, numero, extraLabel) {
                 const div = document.createElement('div');
@@ -2042,16 +2174,14 @@
 
             selectedInversors.forEach((inversor, index) => {
                 const isMicro = inversor.categoria === 'MICRO';
+                const isMonofasico = inversor.classe === 'MONOFÁSICO';
 
-                // Microinversores em modo de proteção única não recebem card
-                // individual: entram todos juntos no bloco combinado abaixo.
-                if (isMicro && usaProtecaoUnicaMicros) return;
+                // Microinversores em modo de proteção única ou agrupada por
+                // fase não recebem card individual: entram juntos nos blocos
+                // combinados abaixo.
+                if (isMicro && isMonofasico && (usaProtecaoUnicaMicros || usaProtecaoPorFaseMicros)) return;
 
-                let extraLabel = '';
-                if (isMicro && isTrif && inversor.classe === 'MONOFÁSICO') {
-                    extraLabel = fases[contadorFaseMicro % 3];
-                    contadorFaseMicro++;
-                }
+                const extraLabel = (isTrif && isMonofasico) ? (faseDoInversor.get(inversor.id) || '') : '';
                 renderCard(inversor, index + 1, extraLabel);
             });
 
@@ -2089,6 +2219,39 @@
                 }
             }
 
+            // Bloco agrupado por fase: 3 circuitos (um por fase), cada um com
+            // um disjuntor dimensionado para os microinversores daquela fase.
+            // Só faz sentido quando todos os micros são do mesmo modelo.
+            if (usaProtecaoPorFaseMicros) {
+                const microsMono = selectedInversors.filter(inv => inv.categoria === 'MICRO' && inv.classe === 'MONOFÁSICO');
+                const gruposMicros = distribuirPorFase(microsMono);
+                gruposMicros.forEach((grupo, i) => {
+                    if (grupo.length === 0) return;
+                    const correnteGrupo = grupo.reduce((sum, inv) => sum + inv.corrente, 0);
+                    const disjuntorGrupo = calcularDisjuntor(correnteGrupo);
+                    const cabosGrupo = calcularCabosInversor(disjuntorGrupo, 'MONOFÁSICO');
+
+                    const div = document.createElement('div');
+                    div.className = 'protecao-individual';
+                    div.innerHTML = `
+                        <h5>⚡ ${nomesFase[i]} — Circuito com ${grupo.length} microinversores (${grupo[0].inversor})</h5>
+                        <div class="inversor-detail-item">
+                            <span class="detail-label">Corrente do Circuito:</span>
+                            <span class="detail-value">${correnteGrupo.toFixed(2)}A</span>
+                        </div>
+                        <div class="inversor-detail-item">
+                            <span class="detail-label">Disjuntor do Circuito:</span>
+                            <span class="detail-value">${disjuntorGrupo}A (Curva C)</span>
+                        </div>
+                        <div class="inversor-detail-item">
+                            <span class="detail-label">Cabo do Circuito:</span>
+                            <span class="detail-value">${cabosGrupo}</span>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+            }
+
             protecaoInversoresDiv.style.display = 'block';
         }
 
@@ -2101,6 +2264,8 @@
             cargaNecessariaInfo.style.display = 'none';
             autoAdjustMessage.style.display = 'none';
             document.getElementById('semClasseAviso').style.display = 'none';
+            document.getElementById('potenciaFaseAviso').style.display = 'none';
+            document.getElementById('correntePorFaseItem').style.display = 'none';
             atualizarPainelMicros();
         }
 
