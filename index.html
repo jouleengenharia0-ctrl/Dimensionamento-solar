@@ -1953,45 +1953,61 @@
                 semClasseAvisoDiv.style.display = 'none';
             }
 
-            // A PD (Potência Disponibilizada) da classe é do padrão inteiro (3
-            // fases). Em rede trifásica com monofásicos, cada TIPO tem sua
-            // própria regra de limite por fase (Portal GD Neoenergia — vale
-            // pra CELPE/COSERN e COELBA):
-            //  - Microinversor: PD ÷ 3 por fase, SEM teto de 15kW (nunca).
-            //  - Inversor tradicional monofásico: PD ÷ 3, com teto de 15kW —
-            //    mesmo que PD/3 dê mais que 15, fica travado em 15kW.
-            //  - Inversor tradicional trifásico: usa o PD total (checagem já
-            //    existente em cargaNecessariaInfo/demandaInfo, não entra aqui).
+            // Regra do Portal GD Neoenergia (só documentada pra CELPE/COSERN e
+            // COELBA — não estendida a outras concessionárias por falta de
+            // fonte). A PD da classe é do padrão inteiro (3 fases):
+            //  - SÓ microinversor (nenhum tradicional monofásico no sistema):
+            //    cada fase é checada separadamente contra PD ÷ 3, SEM teto de
+            //    15kW (a soma total pode passar de 15kW, desde que cada fase
+            //    individualmente respeite PD/3).
+            //  - Assim que existe QUALQUER inversor tradicional monofásico no
+            //    sistema (sozinho ou junto com micros), a conta muda: não é
+            //    mais por fase — é a soma total (tradicional + todos os
+            //    micros, o sistema inteiro) contra PD ÷ 3, limitado a 15kW.
+            //    Confirmado com um caso real: 5kW tradicional + 18kW de micros
+            //    (23kW total) não passa porque o combinado excede o teto,
+            //    mesmo cada fase isolada parecendo OK.
+            //  - Inversor tradicional trifásico: fora dessa checagem, usa o PD
+            //    total (checagem já existente em cargaNecessariaInfo/demandaInfo).
             const potenciaFaseAvisoDiv = document.getElementById('potenciaFaseAviso');
+            const temRegraNeoenergia = (concessionaria === 'CELPE' || concessionaria === 'COELBA');
             const totalMonofasicosNasFases = gruposFaseMono.reduce((sum, g) => sum + g.length, 0);
-            if (isTrifasicoRede && classe && totalMonofasicosNasFases > 0) {
+            if (isTrifasicoRede && classe && temRegraNeoenergia && totalMonofasicosNasFases > 0) {
                 const pdClasseAtual = obterPDClasse(concessionaria, config, classe);
-                const limiteBrutoPorFase = pdClasseAtual / 3;
-                const temTetoTradicional = (concessionaria === 'CELPE' || concessionaria === 'COELBA');
-                const limiteMicroPorFase = limiteBrutoPorFase; // nunca tem teto de 15kW
-                const limiteTradicionalPorFase = temTetoTradicional ? Math.min(limiteBrutoPorFase, 15) : limiteBrutoPorFase;
-                const tetoTradicionalAtingido = temTetoTradicional && limiteBrutoPorFase > 15;
+                const limiteBruto = pdClasseAtual / 3;
 
                 const microsMono = selectedInversors.filter(inv => inv.classe === 'MONOFÁSICO' && inv.categoria === 'MICRO');
                 const tradicionaisMono = selectedInversors.filter(inv => inv.classe === 'MONOFÁSICO' && inv.categoria !== 'MICRO');
-                const potenciasMicroPorFase = distribuirPorFase(microsMono).map(g => g.reduce((sum, inv) => sum + inv.potencia, 0));
-                const potenciasTradicionalPorFase = distribuirPorFase(tradicionaisMono).map(g => g.reduce((sum, inv) => sum + inv.potencia, 0));
-                const maxMicroFase = Math.max(...potenciasMicroPorFase);
-                const maxTradicionalFase = Math.max(...potenciasTradicionalPorFase);
+                const potenciaMicros = microsMono.reduce((sum, inv) => sum + inv.potencia, 0);
+                const potenciaTradicionais = tradicionaisMono.reduce((sum, inv) => sum + inv.potencia, 0);
 
-                const excedeMicro = maxMicroFase > limiteMicroPorFase;
-                const excedeTradicional = maxTradicionalFase > limiteTradicionalPorFase;
+                let excede = false;
+                let mensagem = '';
 
-                if (excedeMicro || excedeTradicional) {
-                    const partes = [];
-                    if (excedeMicro) {
-                        partes.push(`Os microinversores na fase mais carregada (<strong>${maxMicroFase.toFixed(2)}kW</strong>) excedem o limite de <strong>${limiteMicroPorFase.toFixed(2)}kW por fase</strong> (PD da classe ${classe} [${pdClasseAtual}kW] ÷ 3 — microinversor não tem teto de 15kW).`);
+                if (tradicionaisMono.length > 0) {
+                    // Combinado: tradicional monofásico presente muda a regra
+                    // pra soma total do sistema, capada em 15kW.
+                    const limite = Math.min(limiteBruto, 15);
+                    const potenciaCombinada = potenciaTradicionais + potenciaMicros;
+                    if (potenciaCombinada > limite) {
+                        excede = true;
+                        mensagem = `A soma da potência do(s) inversor(es) tradicional(is) monofásico(s) (<strong>${potenciaTradicionais.toFixed(2)}kW</strong>) com os microinversores (<strong>${potenciaMicros.toFixed(2)}kW</strong>) dá <strong>${potenciaCombinada.toFixed(2)}kW</strong>,
+                            que excede o limite de <strong>${limite.toFixed(2)}kW</strong> (PD da classe ${classe} [${pdClasseAtual}kW] ÷ 3, limitado a 15kW nesta concessionária).
+                            Com inversor tradicional monofásico no sistema, o limite passa a valer pra soma total (não é mais por fase) — trocar de classe não aumenta esse teto de 15kW.`;
                     }
-                    if (excedeTradicional) {
-                        partes.push(`O(s) inversor(es) tradicional(is) monofásico(s) na fase mais carregada (<strong>${maxTradicionalFase.toFixed(2)}kW</strong>) excedem o limite de <strong>${limiteTradicionalPorFase.toFixed(2)}kW</strong> (PD ÷ 3${tetoTradicionalAtingido ? ', limitado a 15kW nesta concessionária — trocar de classe não aumenta esse teto' : ''}).`);
+                } else if (microsMono.length > 0) {
+                    // Só microinversor: checagem por fase, sem teto de 15kW.
+                    const potenciasPorFase = distribuirPorFase(microsMono).map(g => g.reduce((sum, inv) => sum + inv.potencia, 0));
+                    const maxFase = Math.max(...potenciasPorFase);
+                    if (maxFase > limiteBruto) {
+                        excede = true;
+                        mensagem = `Os microinversores na fase mais carregada (<strong>${maxFase.toFixed(2)}kW</strong>) excedem o limite de <strong>${limiteBruto.toFixed(2)}kW por fase</strong> (PD da classe ${classe} [${pdClasseAtual}kW] ÷ 3 — sem inversor tradicional monofásico no sistema, esse limite não tem teto de 15kW).`;
                     }
+                }
+
+                if (excede) {
                     potenciaFaseAvisoDiv.className = 'error';
-                    potenciaFaseAvisoDiv.innerHTML = '❌ ' + partes.join(' ');
+                    potenciaFaseAvisoDiv.innerHTML = '❌ ' + mensagem;
                     potenciaFaseAvisoDiv.style.display = 'block';
                 } else {
                     potenciaFaseAvisoDiv.style.display = 'none';
