@@ -1527,12 +1527,57 @@
             return [0, 1, 2].map(i => [...gruposTradicionais[i], ...gruposMicros[i]]);
         }
 
-        // Verifica se todos os microinversores de uma lista são do mesmo modelo
-        // (pré-requisito pra agrupar vários num único disjuntor/circuito).
-        function mesmoModeloMicros(lista) {
-            if (lista.length === 0) return true;
-            const nomeRef = lista[0].inversor;
-            return lista.every(inv => inv.inversor === nomeRef);
+        // Quantidade de modelos distintos numa lista de microinversores.
+        function contarModelosDistintos(lista) {
+            return new Set(lista.map(inv => inv.inversor)).size;
+        }
+
+        // Distribui microinversores nas 3 fases mantendo cada fase/circuito
+        // "pura" (um único modelo por circuito, já que várias marcas não
+        // podem dividir o mesmo disjuntor/condutor) — mas modelos diferentes
+        // podem ocupar fases diferentes. Cada modelo recebe fases na
+        // proporção da sua quantidade (método dos maiores restos: ex. 4
+        // unidades de um modelo + 7 de outro, em 3 fases, dá 1 fase pro
+        // primeiro e 2 fases pro segundo — 4 / 4 / 3). Só funciona bem com
+        // até 3 modelos distintos (1 por fase no limite); com mais que isso
+        // não dá pra manter toda fase pura, então cai no round-robin simples.
+        function distribuirMicrosPorFasePorModelo(microsMono) {
+            const porModelo = [];
+            microsMono.forEach(inv => {
+                let grupo = porModelo.find(g => g.nome === inv.inversor);
+                if (!grupo) { grupo = { nome: inv.inversor, lista: [] }; porModelo.push(grupo); }
+                grupo.lista.push(inv);
+            });
+
+            if (porModelo.length <= 1 || porModelo.length > 3) {
+                return distribuirPorFase(microsMono);
+            }
+
+            const total = microsMono.length;
+            const exatos = porModelo.map(g => (g.lista.length / total) * 3);
+            const alocacao = exatos.map(Math.floor);
+            const restante = 3 - alocacao.reduce((a, b) => a + b, 0);
+            const ordemRestos = exatos
+                .map((exato, i) => ({ i, resto: exato - Math.floor(exato) }))
+                .sort((a, b) => b.resto - a.resto);
+            for (let k = 0; k < restante; k++) {
+                alocacao[ordemRestos[k % ordemRestos.length].i]++;
+            }
+            for (let i = 0; i < alocacao.length; i++) {
+                if (alocacao[i] === 0) alocacao[i] = 1;
+            }
+            while (alocacao.reduce((a, b) => a + b, 0) > 3) {
+                alocacao[alocacao.indexOf(Math.max(...alocacao))]--;
+            }
+
+            const grupos = [];
+            porModelo.forEach((g, idx) => {
+                const nFases = alocacao[idx];
+                const subGrupos = Array.from({ length: nFases }, () => []);
+                g.lista.forEach((inv, i) => subGrupos[i % nFases].push(inv));
+                grupos.push(...subGrupos);
+            });
+            return grupos;
         }
 
         // Função para calcular carga mínima necessária CORRIGIDA
@@ -1601,16 +1646,19 @@
                     <option value="individual">Um disjuntor individual para cada microinversor</option>
                     <option value="unico">Um disjuntor único para todos os microinversores</option>
                 `;
-            } else if (isTrif && microsMonofasicos.length >= 3 && mesmoModeloMicros(microsMonofasicos) &&
+            } else if (isTrif && microsMonofasicos.length >= 3 && contarModelosDistintos(microsMonofasicos) <= 3 &&
                        (concessionaria === 'ENERGISA_PB' || microsMonofasicos.length % 3 === 0)) {
                 // ENERGISA_PB não exige quantidade múltipla de 3: aceita
                 // distribuição desigual entre fases (ex: 11 micros -> 4/4/3).
                 // Nas demais concessionárias mantém a exigência de múltiplo de 3.
+                // Até 3 modelos distintos: cada fase/circuito fica com um
+                // modelo só (distribuirMicrosPorFasePorModelo cuida disso).
                 modoDisponivel = 'porFase';
-                const contagensPorFase = distribuirPorFase(microsMonofasicos).map(g => g.length);
-                const rotuloContagem = contagensPorFase.every(c => c === contagensPorFase[0])
+                const gruposPreview = distribuirMicrosPorFasePorModelo(microsMonofasicos);
+                const contagensPorFase = gruposPreview.map(g => g.length);
+                const rotuloContagem = (contarModelosDistintos(microsMonofasicos) === 1 && contagensPorFase.every(c => c === contagensPorFase[0]))
                     ? `${contagensPorFase[0]} microinversores por circuito, 3 circuitos`
-                    : `3 circuitos: ${contagensPorFase.join(' / ')} microinversores por fase`;
+                    : `3 circuitos: ${gruposPreview.map(g => g.length === 0 ? '0' : `${g.length} (${g[0].inversor})`).join(' / ')}`;
                 document.getElementById('microProtecaoLabel').textContent = '🔀 Proteção dos Microinversores (Trifásico):';
                 microProtecaoTipo.innerHTML = `
                     <option value="individual">Um disjuntor individual para cada microinversor</option>
@@ -2264,7 +2312,7 @@
             // Só faz sentido quando todos os micros são do mesmo modelo.
             if (usaProtecaoPorFaseMicros) {
                 const microsMono = selectedInversors.filter(inv => inv.categoria === 'MICRO' && inv.classe === 'MONOFÁSICO');
-                const gruposMicros = distribuirPorFase(microsMono);
+                const gruposMicros = distribuirMicrosPorFasePorModelo(microsMono);
                 gruposMicros.forEach((grupo, i) => {
                     if (grupo.length === 0) return;
                     const correnteGrupo = grupo.reduce((sum, inv) => sum + inv.corrente, 0);
