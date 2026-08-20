@@ -1601,13 +1601,20 @@
                     <option value="individual">Um disjuntor individual para cada microinversor</option>
                     <option value="unico">Um disjuntor único para todos os microinversores</option>
                 `;
-            } else if (isTrif && microsMonofasicos.length >= 3 && microsMonofasicos.length % 3 === 0 && mesmoModeloMicros(microsMonofasicos)) {
+            } else if (isTrif && microsMonofasicos.length >= 3 && mesmoModeloMicros(microsMonofasicos) &&
+                       (concessionaria === 'ENERGISA_PB' || microsMonofasicos.length % 3 === 0)) {
+                // ENERGISA_PB não exige quantidade múltipla de 3: aceita
+                // distribuição desigual entre fases (ex: 11 micros -> 4/4/3).
+                // Nas demais concessionárias mantém a exigência de múltiplo de 3.
                 modoDisponivel = 'porFase';
-                const porFase = microsMonofasicos.length / 3;
+                const contagensPorFase = distribuirPorFase(microsMonofasicos).map(g => g.length);
+                const rotuloContagem = contagensPorFase.every(c => c === contagensPorFase[0])
+                    ? `${contagensPorFase[0]} microinversores por circuito, 3 circuitos`
+                    : `3 circuitos: ${contagensPorFase.join(' / ')} microinversores por fase`;
                 document.getElementById('microProtecaoLabel').textContent = '🔀 Proteção dos Microinversores (Trifásico):';
                 microProtecaoTipo.innerHTML = `
                     <option value="individual">Um disjuntor individual para cada microinversor</option>
-                    <option value="porFase">Agrupar por fase (${porFase} microinversores por circuito, 3 circuitos)</option>
+                    <option value="porFase">Agrupar por fase (${rotuloContagem})</option>
                 `;
             }
 
@@ -1625,8 +1632,11 @@
 
             // Balanceamento de quantidade: aplica-se a qualquer concessionária,
             // pois é uma restrição elétrica (rede trifásica com 3 fases),
-            // não uma regra específica de uma distribuidora.
-            if (isTrif && microsMonofasicos.length >= 1) {
+            // não uma regra específica de uma distribuidora — EXCETO
+            // ENERGISA_PB, que aceita distribuição desigual entre fases
+            // (o agrupamento por fase continua disponível, só não exige
+            // múltiplo de 3 nem mostra esse aviso).
+            if (isTrif && microsMonofasicos.length >= 1 && concessionaria !== 'ENERGISA_PB') {
                 const total = microsMonofasicos.length;
                 const resto = total % 3;
                 microFaseInfo.style.display = 'block';
