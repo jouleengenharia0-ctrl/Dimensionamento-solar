@@ -413,7 +413,7 @@ Um datasheet pode conter VÁRIOS modelos (colunas de uma tabela). Liste TODOS os
 Para cada modelo retorne:
 - "inversor": string "MARCA - MODELO" em MAIÚSCULAS para a marca (ex: "DEYE - SUN-8K-SG05LP1"). Use o código exato do modelo como no datasheet.
 - "potencia": número em kW da potência nominal de saída CA (AC). Converta W para kW (ex: 8000 W -> 8). Não use potência de entrada CC/FV.
-- "corrente": número em A da corrente MÁXIMA de saída CA (max. AC output current / corrente de saída máxima). Se só existir a corrente nominal, use-a. Se for micro com várias entradas, use a corrente de saída CA total.
+- "corrente": número em A da corrente MÁXIMA de saída CA, ou seja, a linha "Max. AC output current", "Max. continuous AC output current", "Max. output current" ou "Corrente máxima de saída". NUNCA use a corrente nominal ("Rated AC output current" / "Nominal AC output current"), que é menor. A corrente máxima costuma ser maior que a nominal (ex: nominal 4,5 A -> máxima 5,5 A). Se o datasheet só trouxer a nominal, retorne null para "corrente". Se for micro com várias entradas, use a corrente de saída CA máxima total.
 - "classe": "MONOFÁSICO" ou "TRIFÁSICO" (pela saída CA: 1 fase/monofásico/single phase = MONOFÁSICO; 3 fases/three phase = TRIFÁSICO).
 - "categoria": "MICRO" se for microinversor (ex: vários MPPT/entradas individuais por módulo, famílias como Hoymiles HMS/HMT, APsystems, Deye SUN-M, Enphase), senão "TRADICIONAL".
 Use null para o que não encontrar (não invente). Se houver mais de uma corrente por tensão, prefira a de 220 V/230 V em monofásicos e a de 380 V/400 V em trifásicos.
