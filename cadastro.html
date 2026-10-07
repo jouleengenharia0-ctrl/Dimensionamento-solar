@@ -69,6 +69,19 @@
         hr { margin: 30px 0; border: none; border-top: 1px solid #e9ecef; }
         .lista-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .busca-lista { max-width: 260px; margin-bottom: 10px; }
+        .box-ia { background: #f4f8fc; border: 2px dashed #3498db; border-radius: 12px; padding: 18px; margin-bottom: 25px; }
+        .box-ia h3 { margin-bottom: 12px; }
+        .linha-api { display: grid; grid-template-columns: 1fr 180px auto; gap: 10px; margin-bottom: 12px; align-items: end; }
+        .linha-api button { width: auto; }
+        .status-ia { margin-top: 10px; font-size: 0.9em; color: #495057; white-space: pre-wrap; }
+        #tabelaRevisao input[type=text], #tabelaRevisao input[type=number], #tabelaRevisao select { padding: 6px 8px; font-size: 0.9em; border-width: 1px; }
+        #tabelaRevisao input[type=checkbox] { width: auto; }
+        #tabelaRevisao td { padding: 6px 4px; }
+        #tabelaRevisao tr.existente td:first-child::after { content: ''; }
+        .aviso-existe { color: #d35400; font-size: 0.75em; display: block; }
+        #areaRevisao { display: none; margin-top: 15px; overflow-x: auto; }
+        .acoes-revisao { display: flex; gap: 10px; margin-top: 12px; }
+        .acoes-revisao button { margin-top: 0 !important; }
     </style>
 </head>
 <body>
@@ -99,7 +112,46 @@
                     <button id="btnLogout" class="secundario" style="width:auto;padding:8px 14px;">Sair</button>
                 </div>
 
-                <h3 style="margin-bottom:15px;">Novo inversor</h3>
+                <div class="box-ia">
+                    <h3>📄 Importar do datasheet (IA)</h3>
+                    <div class="linha-api">
+                        <div>
+                            <label for="apiKey">Chave da API OpenAI</label>
+                            <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off">
+                        </div>
+                        <div>
+                            <label for="modeloIA">Modelo</label>
+                            <select id="modeloIA">
+                                <option value="gpt-4o">gpt-4o</option>
+                                <option value="gpt-4o-mini">gpt-4o-mini</option>
+                                <option value="gpt-4.1">gpt-4.1</option>
+                            </select>
+                        </div>
+                        <button id="btnSalvarChave" class="secundario" style="margin-top:0;">Salvar chave</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="arquivoDatasheet">Datasheet (PDF ou imagem)</label>
+                        <input type="file" id="arquivoDatasheet" accept=".pdf,image/*">
+                    </div>
+                    <button id="btnExtrair">Extrair inversores do datasheet</button>
+                    <div id="statusIA" class="status-ia"></div>
+
+                    <div id="areaRevisao">
+                        <strong>Revise os dados antes de cadastrar:</strong>
+                        <table id="tabelaRevisao">
+                            <thead>
+                                <tr><th></th><th>Marca - Modelo</th><th>Potência (kW)</th><th>Corrente (A)</th><th>Classe</th><th>Categoria</th><th></th></tr>
+                            </thead>
+                            <tbody id="corpoRevisao"></tbody>
+                        </table>
+                        <div class="acoes-revisao">
+                            <button id="btnCadastrarRevisao">Cadastrar selecionados</button>
+                            <button id="btnDescartarRevisao" class="secundario">Descartar</button>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom:15px;">Novo inversor (manual)</h3>
                 <div class="form-group">
                     <label for="campoNome">Marca - Modelo</label>
                     <input type="text" id="campoNome" placeholder="Ex: DEYE - SUN-8K-G">
@@ -272,6 +324,226 @@
                 });
             });
         }
+
+        // ================= Extração via IA =================
+        const PDFJS_VERSION = '4.4.168';
+        const PDFJS_BASE = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/`;
+        const elChave = document.getElementById('apiKey');
+        const elModelo = document.getElementById('modeloIA');
+        const elStatus = document.getElementById('statusIA');
+        let pdfjsLib = null;
+
+        try {
+            elChave.value = localStorage.getItem('openai_api_key') || '';
+            elModelo.value = localStorage.getItem('openai_modelo') || 'gpt-4o';
+        } catch (e) {}
+
+        document.getElementById('btnSalvarChave').addEventListener('click', () => {
+            try {
+                localStorage.setItem('openai_api_key', elChave.value.trim());
+                localStorage.setItem('openai_modelo', elModelo.value);
+                mostrarMsg('Chave salva neste navegador.', 'sucesso');
+            } catch (e) {
+                mostrarMsg('Não foi possível salvar no navegador.', 'erro');
+            }
+        });
+        elModelo.addEventListener('change', () => {
+            try { localStorage.setItem('openai_modelo', elModelo.value); } catch (e) {}
+        });
+
+        async function carregarPdfJs() {
+            if (pdfjsLib) return pdfjsLib;
+            pdfjsLib = await import(PDFJS_BASE + 'pdf.min.mjs');
+            // Worker cross-origin precisa ser carregado via blob
+            const codigo = await (await fetch(PDFJS_BASE + 'pdf.worker.min.mjs')).text();
+            pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([codigo], { type: 'text/javascript' }));
+            return pdfjsLib;
+        }
+
+        function lerComoDataURL(arquivo) {
+            return new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result);
+                r.onerror = rej;
+                r.readAsDataURL(arquivo);
+            });
+        }
+
+        // Retorna { texto, imagens } — usa texto do PDF; se for escaneado, renderiza páginas como imagem.
+        async function prepararConteudo(arquivo) {
+            if (arquivo.type.startsWith('image/')) {
+                return { texto: '', imagens: [await lerComoDataURL(arquivo)] };
+            }
+            const lib = await carregarPdfJs();
+            const pdf = await lib.getDocument({ data: await arquivo.arrayBuffer() }).promise;
+            let texto = '';
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const pagina = await pdf.getPage(i);
+                const c = await pagina.getTextContent();
+                // Reconstrói linhas pela posição Y para preservar tabelas
+                const linhas = [];
+                let ultimoY = null, atual = '';
+                c.items.forEach(it => {
+                    const y = Math.round(it.transform[5]);
+                    if (ultimoY !== null && Math.abs(y - ultimoY) > 3) { linhas.push(atual); atual = ''; }
+                    atual += it.str + (it.hasEOL ? '' : ' | ');
+                    ultimoY = y;
+                });
+                if (atual) linhas.push(atual);
+                texto += `\n--- Página ${i} ---\n` + linhas.join('\n');
+            }
+            if (texto.replace(/[\s|\-]|Página \d+/g, '').length > 300) {
+                return { texto, imagens: [] };
+            }
+            // PDF escaneado: renderiza até 6 páginas como imagem
+            const imagens = [];
+            for (let i = 1; i <= Math.min(pdf.numPages, 6); i++) {
+                const pagina = await pdf.getPage(i);
+                const vp = pagina.getViewport({ scale: 1.8 });
+                const canvas = document.createElement('canvas');
+                canvas.width = vp.width; canvas.height = vp.height;
+                await pagina.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+                imagens.push(canvas.toDataURL('image/jpeg', 0.85));
+            }
+            return { texto: '', imagens };
+        }
+
+        const PROMPT_SISTEMA = `Você extrai dados de datasheets de inversores solares fotovoltaicos.
+Um datasheet pode conter VÁRIOS modelos (colunas de uma tabela). Liste TODOS os modelos de inversor do documento, um item por modelo.
+Para cada modelo retorne:
+- "inversor": string "MARCA - MODELO" em MAIÚSCULAS para a marca (ex: "DEYE - SUN-8K-SG05LP1"). Use o código exato do modelo como no datasheet.
+- "potencia": número em kW da potência nominal de saída CA (AC). Converta W para kW (ex: 8000 W -> 8). Não use potência de entrada CC/FV.
+- "corrente": número em A da corrente MÁXIMA de saída CA (max. AC output current / corrente de saída máxima). Se só existir a corrente nominal, use-a. Se for micro com várias entradas, use a corrente de saída CA total.
+- "classe": "MONOFÁSICO" ou "TRIFÁSICO" (pela saída CA: 1 fase/monofásico/single phase = MONOFÁSICO; 3 fases/three phase = TRIFÁSICO).
+- "categoria": "MICRO" se for microinversor (ex: vários MPPT/entradas individuais por módulo, famílias como Hoymiles HMS/HMT, APsystems, Deye SUN-M, Enphase), senão "TRADICIONAL".
+Use null para o que não encontrar (não invente). Se houver mais de uma corrente por tensão, prefira a de 220 V/230 V em monofásicos e a de 380 V/400 V em trifásicos.
+Responda SOMENTE com JSON no formato: {"inversores":[{"inversor":"","potencia":0,"corrente":0,"classe":"","categoria":""}]}`;
+
+        async function chamarOpenAI(chave, modelo, conteudo) {
+            const partes = [];
+            if (conteudo.texto) {
+                partes.push({ type: 'text', text: 'Texto extraído do datasheet:\n' + conteudo.texto.slice(0, 120000) });
+            } else {
+                partes.push({ type: 'text', text: 'Páginas do datasheet (imagens):' });
+                conteudo.imagens.forEach(url => partes.push({ type: 'image_url', image_url: { url } }));
+            }
+            const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + chave },
+                body: JSON.stringify({
+                    model: modelo,
+                    temperature: 0,
+                    response_format: { type: 'json_object' },
+                    messages: [
+                        { role: 'system', content: PROMPT_SISTEMA },
+                        { role: 'user', content: partes }
+                    ]
+                })
+            });
+            const dados = await resp.json();
+            if (!resp.ok) throw new Error(dados.error?.message || ('HTTP ' + resp.status));
+            const json = JSON.parse(dados.choices[0].message.content);
+            return Array.isArray(json.inversores) ? json.inversores : [];
+        }
+
+        document.getElementById('btnExtrair').addEventListener('click', async () => {
+            const chave = elChave.value.trim();
+            const arquivo = document.getElementById('arquivoDatasheet').files[0];
+            if (!chave) { mostrarMsg('Informe a chave da API da OpenAI.', 'erro'); return; }
+            if (!arquivo) { mostrarMsg('Selecione o datasheet.', 'erro'); return; }
+            const btn = document.getElementById('btnExtrair');
+            btn.disabled = true;
+            try {
+                elStatus.textContent = 'Lendo o arquivo...';
+                const conteudo = await prepararConteudo(arquivo);
+                elStatus.textContent = conteudo.texto
+                    ? 'Enviando texto do datasheet para a IA...'
+                    : 'Datasheet sem texto (escaneado) — enviando imagens para a IA...';
+                const lista = await chamarOpenAI(chave, elModelo.value, conteudo);
+                if (!lista.length) {
+                    elStatus.textContent = 'A IA não encontrou inversores nesse arquivo.';
+                    return;
+                }
+                montarRevisao(lista);
+                elStatus.textContent = `${lista.length} inversor(es) encontrado(s). Confira os campos e cadastre.`;
+            } catch (erro) {
+                elStatus.textContent = 'Erro: ' + erro.message;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+
+        function montarRevisao(lista) {
+            const corpo = document.getElementById('corpoRevisao');
+            corpo.innerHTML = '';
+            const existentes = new Set(todosInversores.map(i => i.id));
+            lista.forEach(inv => {
+                const nome = String(inv.inversor || '').trim();
+                const classe = String(inv.classe || '').toUpperCase().startsWith('TRI') ? 'TRIFÁSICO' : 'MONOFÁSICO';
+                const categoria = String(inv.categoria || '').toUpperCase() === 'MICRO' ? 'MICRO' : 'TRADICIONAL';
+                const tr = document.createElement('tr');
+                const jaExiste = nome && existentes.has(gerarSlug(nome));
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="r-sel" checked></td>
+                    <td><input type="text" class="r-nome"></td>
+                    <td><input type="number" class="r-pot" step="0.01" min="0"></td>
+                    <td><input type="number" class="r-cor" step="0.01" min="0"></td>
+                    <td><select class="r-classe"><option value="MONOFÁSICO">Monofásico</option><option value="TRIFÁSICO">Trifásico</option></select></td>
+                    <td><select class="r-cat"><option value="TRADICIONAL">Tradicional</option><option value="MICRO">Micro</option></select></td>
+                    <td><button class="remover r-del" title="Remover linha">✕</button></td>`;
+                tr.querySelector('.r-nome').value = nome;
+                tr.querySelector('.r-pot').value = inv.potencia ?? '';
+                tr.querySelector('.r-cor').value = inv.corrente ?? '';
+                tr.querySelector('.r-classe').value = classe;
+                tr.querySelector('.r-cat').value = categoria;
+                if (jaExiste) {
+                    const aviso = document.createElement('span');
+                    aviso.className = 'aviso-existe';
+                    aviso.textContent = 'já cadastrado — será sobrescrito';
+                    tr.querySelector('td:nth-child(2)').appendChild(aviso);
+                }
+                tr.querySelector('.r-del').addEventListener('click', () => tr.remove());
+                corpo.appendChild(tr);
+            });
+            document.getElementById('areaRevisao').style.display = 'block';
+        }
+
+        document.getElementById('btnDescartarRevisao').addEventListener('click', () => {
+            document.getElementById('corpoRevisao').innerHTML = '';
+            document.getElementById('areaRevisao').style.display = 'none';
+        });
+
+        document.getElementById('btnCadastrarRevisao').addEventListener('click', async () => {
+            const linhas = [...document.querySelectorAll('#corpoRevisao tr')].filter(tr => tr.querySelector('.r-sel').checked);
+            if (!linhas.length) { mostrarMsg('Nenhum inversor selecionado.', 'erro'); return; }
+            const itens = [];
+            for (const tr of linhas) {
+                const nome = tr.querySelector('.r-nome').value.trim();
+                const potencia = parseFloat(tr.querySelector('.r-pot').value);
+                const corrente = parseFloat(tr.querySelector('.r-cor').value);
+                if (!nome || isNaN(potencia) || isNaN(corrente)) {
+                    tr.style.background = '#fdecea';
+                    mostrarMsg('Preencha nome, potência e corrente nas linhas marcadas em vermelho.', 'erro');
+                    return;
+                }
+                tr.style.background = '';
+                itens.push({
+                    inversor: nome, potencia, corrente,
+                    classe: tr.querySelector('.r-classe').value,
+                    categoria: tr.querySelector('.r-cat').value
+                });
+            }
+            try {
+                for (const it of itens) await setDoc(doc(db, 'inversores', gerarSlug(it.inversor)), it);
+                mostrarMsg(`${itens.length} inversor(es) cadastrado(s) com sucesso.`, 'sucesso');
+                document.getElementById('corpoRevisao').innerHTML = '';
+                document.getElementById('areaRevisao').style.display = 'none';
+                elStatus.textContent = '';
+                carregarLista();
+            } catch (erro) {
+                mostrarMsg('Erro ao cadastrar: ' + erro.message, 'erro');
+            }
+        });
 
         document.getElementById('buscaLista').addEventListener('input', function() {
             const termo = this.value.toLowerCase().trim();
