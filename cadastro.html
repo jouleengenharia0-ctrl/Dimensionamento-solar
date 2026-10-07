@@ -419,10 +419,10 @@ Campos de cada grupo de modelos (tabela):
 - "potencia_kw": lista, em kW, da "Potência ativa nominal de saída CA" (AC). Converta W para kW. Não use potência de entrada CC/FV nem potência aparente.
 - "corrente_max": lista, em A, da corrente MÁXIMA de saída CA. Procure, nesta ordem de prioridade, as linhas: "Max. AC output current" / "Max. continuous AC output current" / "Max. output current" / "Corrente máxima de saída" / "Máxima Corrente de Falha de Saída" ("Max. output fault current"). NÃO use "corrente nominal" ("Rated/Nominal AC output current") se existir alguma das linhas máximas. Quando a célula traz dois valores separados por "/" (ex: "5/4.8", correspondentes a 220 V / 230 V), use o PRIMEIRO. Em trifásicos, use o valor de 380 V/400 V. Use null nas posições sem dado.
 - "fonte_corrente": o rótulo literal da linha usada (ex: "Máxima Corrente de Falha de Saída (A)").
-- "classe": "MONOFÁSICO" ou "TRIFÁSICO" (pela saída CA: L/N/PE ou 1 fase = MONOFÁSICO; 3 fases = TRIFÁSICO).
+- "classe": lista com a mesma quantidade/ordem de "modelos" (uma por coluna, pois uma tabela pode misturar mono e trifásicos), cada item "MONOFÁSICO" ou "TRIFÁSICO". Decida pela saída CA do datasheet, olhando estas linhas: "Formulário de Conexão à Rede / Grid connection / Grid type" (L/N/PE, "1/N/PE", "single phase", "1W+N+PE" = MONOFÁSICO; "3L/N/PE", "3/N/PE", "3W+N+PE", "three phase", "3P4L" = TRIFÁSICO), "Número de fases", e a tensão nominal CA (220/230 V = mono; 380/400 V = tri). Se não houver essa linha, deduza pela tensão e pela corrente, e só então pelo nome do modelo.
 - "categoria": "MICRO" se for microinversor (vários MPPT/entradas por módulo, ex: Hoymiles HMS/HMT, APsystems, Deye SUN-M, Enphase), senão "TRADICIONAL".
 Não invente: use null para o que não encontrar. Se o documento tiver mais de uma tabela/família, devolva um grupo para cada.
-Responda SOMENTE com JSON: {"tabelas":[{"marca":"","modelos":[""],"potencia_kw":[0],"corrente_max":[0],"fonte_corrente":"","classe":"","categoria":""}]}`;
+Responda SOMENTE com JSON: {"tabelas":[{"marca":"","modelos":[""],"potencia_kw":[0],"corrente_max":[0],"fonte_corrente":"","classe":["MONOFÁSICO"],"categoria":""}]}`;
 
         async function chamarOpenAI(chave, modelo, conteudo) {
             const partes = [];
@@ -461,7 +461,7 @@ Responda SOMENTE com JSON: {"tabelas":[{"marca":"","modelos":[""],"potencia_kw":
                         potencia: pot.length === 1 ? pot[0] : pot[i],
                         corrente: cor.length === 1 ? cor[0] : cor[i],
                         fonte_corrente: t.fonte_corrente,
-                        classe: t.classe,
+                        classe: Array.isArray(t.classe) ? (t.classe.length === 1 ? t.classe[0] : t.classe[i]) : t.classe,
                         categoria: t.categoria
                     });
                 });
