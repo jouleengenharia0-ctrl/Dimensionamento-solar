@@ -377,23 +377,26 @@
             const lib = await carregarPdfJs();
             const pdf = await lib.getDocument({ data: await arquivo.arrayBuffer() }).promise;
             let texto = '';
+            const linhasPdf = [];
             for (let i = 1; i <= pdf.numPages; i++) {
                 const pagina = await pdf.getPage(i);
                 const c = await pagina.getTextContent();
                 // Reconstrói linhas pela posição Y para preservar tabelas
                 // (ordena por Y e depois X: a ordem do fluxo do PDF embaralha colunas de tabela)
                 const itens = c.items.filter(it => it.str.trim())
-                    .map(it => ({ s: it.str.trim(), x: it.transform[4], y: it.transform[5] }))
+                    .map(it => ({ s: it.str.trim(), x: it.transform[4], y: it.transform[5], w: it.width || 0 }))
                     .sort((a, b) => (b.y - a.y) || (a.x - b.x));
                 const linhas = [];
                 let ultimoY = null, atual = [];
                 itens.forEach(it => {
-                    if (ultimoY !== null && Math.abs(it.y - ultimoY) > 3) { linhas.push(atual.join(' | ')); atual = []; }
-                    atual.push(it.s);
+                    if (ultimoY !== null && Math.abs(it.y - ultimoY) > 3) { linhas.push(atual); atual = []; }
+                    atual.push(it);
                     ultimoY = it.y;
                 });
-                if (atual.length) linhas.push(atual.join(' | '));
-                texto += `\n--- Página ${i} ---\n` + linhas.join('\n');
+                if (atual.length) linhas.push(atual);
+                linhas.forEach(l => { l.sort((a, b) => a.x - b.x); linhasPdf.push(l); });
+                // Cada célula leva sua posição horizontal (@x): a IA alinha valor <-> coluna do modelo por ela
+                texto += `\n--- Página ${i} ---\n` + linhas.map(l => l.map(it => `${it.s}@${Math.round(it.x + it.w / 2)}`).join(' | ')).join('\n');
             }
             const temTexto = texto.replace(/[\s|\-]|Página \d+/g, '').length > 300;
             // Renderiza até 6 páginas como imagem — a IA lê a tabela visualmente (mais confiável que o texto)
@@ -406,7 +409,27 @@
                 await pagina.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
                 imagens.push(canvas.toDataURL('image/jpeg', 0.9));
             }
-            return { texto: temTexto ? texto : '', imagens };
+            return { texto: temTexto ? texto : '', imagens, linhas: temTexto ? linhasPdf : [] };
+        }
+
+        // ---- Leitura determinística de uma linha da tabela direto do PDF (não depende da IA alinhar colunas) ----
+        const normalizar = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+        const ehNumero = s => /^\d+([.,]\d+)?(\s*\/\s*\d+([.,]\d+)?)*$/.test(s);
+
+        // Acha a linha cujo rótulo bate com `rotulo` e devolve o 1º número de cada célula (ex: "5/4.8" -> 5).
+        // Só aceita se a quantidade de células == nº de modelos (ou 1 célula mesclada, repetida).
+        function valoresDaLinha(linhas, rotulo, n) {
+            const alvo = normalizar(String(rotulo || ''));
+            if (!linhas || !linhas.length || alvo.length < 6) return null;
+            for (const l of linhas) {
+                const rot = normalizar(l.filter(it => !ehNumero(it.s)).map(it => it.s).join(''));
+                if (rot.length < 6 || !(rot.includes(alvo) || alvo.includes(rot))) continue;
+                const celulas = l.filter(it => ehNumero(it.s));
+                const nums = celulas.map(it => parseFloat(it.s.split('/')[0].replace(',', '.')));
+                if (nums.length === n) return nums;
+                if (nums.length === 1) return Array(n).fill(nums[0]);
+            }
+            return null;
         }
 
         const PROMPT_SISTEMA = `Você extrai dados de datasheets de inversores solares fotovoltaicos.
@@ -418,18 +441,20 @@ Campos de cada grupo de modelos (tabela):
 - "modelos": lista descrita acima.
 - "potencia_kw": lista, em kW, da "Potência ativa nominal de saída CA" (AC). Converta W para kW. Não use potência de entrada CC/FV nem potência aparente.
 - "corrente_max": lista, em A, da corrente MÁXIMA de saída CA. Procure, nesta ordem de prioridade, as linhas: "Max. AC output current" / "Max. continuous AC output current" / "Max. output current" / "Corrente máxima de saída" / "Máxima Corrente de Falha de Saída" ("Max. output fault current"). NÃO use "corrente nominal" ("Rated/Nominal AC output current") se existir alguma das linhas máximas. Quando a célula traz dois valores separados por "/" (ex: "5/4.8", correspondentes a 220 V / 230 V), use o PRIMEIRO. Em trifásicos, use o valor de 380 V/400 V. Use null nas posições sem dado.
-- "fonte_corrente": o rótulo literal da linha usada (ex: "Máxima Corrente de Falha de Saída (A)").
+- "fonte_corrente": o rótulo literal, EXATAMENTE como escrito no datasheet, da linha usada (ex: "Máxima Corrente de Falha de Saída (A)"). O sistema usa esse rótulo para reler os valores direto do PDF.
+- "fonte_potencia": o rótulo literal da linha de potência usada (ex: "Potência activa nominal de saída CA (kW)").
+O texto de apoio traz cada célula com sua posição horizontal no formato "valor@x". Os valores de uma coluna têm x próximo ao x do nome do modelo daquela coluna: use isso para alinhar. Uma célula mesclada tem um único x no meio e vale para todas as colunas que cobre.
 - "classe": lista com a mesma quantidade/ordem de "modelos" (uma por coluna, pois uma tabela pode misturar mono e trifásicos), cada item "MONOFÁSICO" ou "TRIFÁSICO". Decida pela saída CA do datasheet, olhando estas linhas: "Formulário de Conexão à Rede / Grid connection / Grid type" (L/N/PE, "1/N/PE", "single phase", "1W+N+PE" = MONOFÁSICO; "3L/N/PE", "3/N/PE", "3W+N+PE", "three phase", "3P4L" = TRIFÁSICO), "Número de fases", e a tensão nominal CA (220/230 V = mono; 380/400 V = tri). Se não houver essa linha, deduza pela tensão e pela corrente, e só então pelo nome do modelo.
 - "categoria": "MICRO" se for microinversor (vários MPPT/entradas por módulo, ex: Hoymiles HMS/HMT, APsystems, Deye SUN-M, Enphase), senão "TRADICIONAL".
 Não invente: use null para o que não encontrar. Se o documento tiver mais de uma tabela/família, devolva um grupo para cada.
-Responda SOMENTE com JSON: {"tabelas":[{"marca":"","modelos":[""],"potencia_kw":[0],"corrente_max":[0],"fonte_corrente":"","classe":["MONOFÁSICO"],"categoria":""}]}`;
+Responda SOMENTE com JSON: {"tabelas":[{"marca":"","modelos":[""],"potencia_kw":[0],"corrente_max":[0],"fonte_corrente":"","fonte_potencia":"","classe":["MONOFÁSICO"],"categoria":""}]}`;
 
         async function chamarOpenAI(chave, modelo, conteudo) {
             const partes = [];
             partes.push({ type: 'text', text: 'Páginas do datasheet (imagens) — a fonte principal; leia as tabelas visualmente, coluna por coluna:' });
             conteudo.imagens.forEach(url => partes.push({ type: 'image_url', image_url: { url, detail: 'high' } }));
             if (conteudo.texto) {
-                partes.push({ type: 'text', text: 'Texto extraído do mesmo PDF (apoio, a ordem das colunas pode estar embaralhada):\n' + conteudo.texto.slice(0, 60000) });
+                partes.push({ type: 'text', text: 'Texto extraído do mesmo PDF, com a posição horizontal (@x) de cada célula:\n' + conteudo.texto.slice(0, 60000) });
             }
             const resp = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -451,8 +476,13 @@ Responda SOMENTE com JSON: {"tabelas":[{"marca":"","modelos":[""],"potencia_kw":
             const lista = [];
             (json.tabelas || []).forEach(t => {
                 const modelos = t.modelos || [];
-                const pot = t.potencia_kw || [];
-                const cor = t.corrente_max || [];
+                let pot = t.potencia_kw || [];
+                let cor = t.corrente_max || [];
+                // Se o rótulo da linha foi identificado, relê os valores direto do PDF (posição exata de cada coluna)
+                const corPdf = valoresDaLinha(conteudo.linhas, t.fonte_corrente, modelos.length);
+                const potPdf = valoresDaLinha(conteudo.linhas, t.fonte_potencia, modelos.length);
+                if (corPdf) cor = corPdf;
+                if (potPdf) pot = potPdf;
                 modelos.forEach((m, i) => {
                     const marca = String(t.marca || '').trim().toUpperCase();
                     const modeloLimpo = String(m).replace(/\s+/g, '');
@@ -460,7 +490,7 @@ Responda SOMENTE com JSON: {"tabelas":[{"marca":"","modelos":[""],"potencia_kw":
                         inversor: marca ? `${marca} - ${modeloLimpo}` : modeloLimpo,
                         potencia: pot.length === 1 ? pot[0] : pot[i],
                         corrente: cor.length === 1 ? cor[0] : cor[i],
-                        fonte_corrente: t.fonte_corrente,
+                        fonte_corrente: (t.fonte_corrente || '') + (corPdf ? ' ✔ lido do PDF' : ' ⚠ lido pela IA, confira'),
                         classe: Array.isArray(t.classe) ? (t.classe.length === 1 ? t.classe[0] : t.classe[i]) : t.classe,
                         categoria: t.categoria
                     });
