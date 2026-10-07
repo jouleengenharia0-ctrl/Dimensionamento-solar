@@ -410,16 +410,19 @@
         }
 
         const PROMPT_SISTEMA = `Você extrai dados de datasheets de inversores solares fotovoltaicos.
-Um datasheet pode conter VÁRIOS modelos (colunas de uma tabela). Liste TODOS os modelos de inversor do documento, um item por modelo.
-Para cada modelo retorne:
-- "inversor": string "MARCA - MODELO" em MAIÚSCULAS para a marca (ex: "DEYE - SUN-8K-SG05LP1"). Use o código exato do modelo como no datasheet.
-- "potencia": número em kW da potência nominal de saída CA (AC). Converta W para kW (ex: 8000 W -> 8). Não use potência de entrada CC/FV.
-- "corrente": número em A da corrente MÁXIMA de saída CA, ou seja, a linha "Max. AC output current", "Max. continuous AC output current", "Max. output current" ou "Corrente máxima de saída". NUNCA use a corrente nominal ("Rated AC output current" / "Nominal AC output current"), que é menor. A corrente máxima costuma ser maior que a nominal (ex: nominal 4,5 A -> máxima 5,5 A). Se o datasheet só trouxer a nominal, retorne null para "corrente". Se for micro com várias entradas, use a corrente de saída CA máxima total.
-- "classe": "MONOFÁSICO" ou "TRIFÁSICO" (pela saída CA: 1 fase/monofásico/single phase = MONOFÁSICO; 3 fases/three phase = TRIFÁSICO).
-- "categoria": "MICRO" se for microinversor (ex: vários MPPT/entradas individuais por módulo, famílias como Hoymiles HMS/HMT, APsystems, Deye SUN-M, Enphase), senão "TRADICIONAL".
-- "fonte_corrente": cópia literal do rótulo da linha do datasheet de onde tirou a corrente, com o valor (ex: "Max. AC output current (A): 5.5"). Sirva-se da coluna exata do modelo — confira que o valor pertence à coluna daquele modelo.
-Use null para o que não encontrar (não invente). Se houver mais de uma corrente por tensão, prefira a de 220 V/230 V em monofásicos e a de 380 V/400 V em trifásicos.
-Responda SOMENTE com JSON no formato: {"inversores":[{"inversor":"","potencia":0,"corrente":0,"fonte_corrente":"","classe":"","categoria":""}]}`;
+A tabela de dados técnicos tem UMA COLUNA por modelo. Para não misturar colunas, trabalhe por LINHAS da tabela:
+1. Leia o cabeçalho e liste os modelos na ordem das colunas, da esquerda para a direita, em "modelos". O nome do modelo costuma quebrar em duas linhas no cabeçalho (ex: "SUN-1K-G04" + "P1-EU-AM1"): junte SEM espaço e SEM acrescentar ou trocar nenhum caractere (-> "SUN-1K-G04P1-EU-AM1").
+2. Transcreva a linha de potência CA e a linha de corrente como listas com EXATAMENTE a mesma quantidade de itens e a mesma ordem de "modelos". O n-ésimo valor pertence ao n-ésimo modelo. Se uma célula é mesclada (um valor único valendo para todos), repita o valor em todas as posições.
+Campos de cada grupo de modelos (tabela):
+- "marca": em MAIÚSCULAS (ex: "DEYE").
+- "modelos": lista descrita acima.
+- "potencia_kw": lista, em kW, da "Potência ativa nominal de saída CA" (AC). Converta W para kW. Não use potência de entrada CC/FV nem potência aparente.
+- "corrente_max": lista, em A, da corrente MÁXIMA de saída CA. Procure, nesta ordem de prioridade, as linhas: "Max. AC output current" / "Max. continuous AC output current" / "Max. output current" / "Corrente máxima de saída" / "Máxima Corrente de Falha de Saída" ("Max. output fault current"). NÃO use "corrente nominal" ("Rated/Nominal AC output current") se existir alguma das linhas máximas. Quando a célula traz dois valores separados por "/" (ex: "5/4.8", correspondentes a 220 V / 230 V), use o PRIMEIRO. Em trifásicos, use o valor de 380 V/400 V. Use null nas posições sem dado.
+- "fonte_corrente": o rótulo literal da linha usada (ex: "Máxima Corrente de Falha de Saída (A)").
+- "classe": "MONOFÁSICO" ou "TRIFÁSICO" (pela saída CA: L/N/PE ou 1 fase = MONOFÁSICO; 3 fases = TRIFÁSICO).
+- "categoria": "MICRO" se for microinversor (vários MPPT/entradas por módulo, ex: Hoymiles HMS/HMT, APsystems, Deye SUN-M, Enphase), senão "TRADICIONAL".
+Não invente: use null para o que não encontrar. Se o documento tiver mais de uma tabela/família, devolva um grupo para cada.
+Responda SOMENTE com JSON: {"tabelas":[{"marca":"","modelos":[""],"potencia_kw":[0],"corrente_max":[0],"fonte_corrente":"","classe":"","categoria":""}]}`;
 
         async function chamarOpenAI(chave, modelo, conteudo) {
             const partes = [];
@@ -444,7 +447,26 @@ Responda SOMENTE com JSON no formato: {"inversores":[{"inversor":"","potencia":0
             const dados = await resp.json();
             if (!resp.ok) throw new Error(dados.error?.message || ('HTTP ' + resp.status));
             const json = JSON.parse(dados.choices[0].message.content);
-            return Array.isArray(json.inversores) ? json.inversores : [];
+            // Une as listas por posição de coluna: modelos[i] <-> potencia_kw[i] <-> corrente_max[i]
+            const lista = [];
+            (json.tabelas || []).forEach(t => {
+                const modelos = t.modelos || [];
+                const pot = t.potencia_kw || [];
+                const cor = t.corrente_max || [];
+                modelos.forEach((m, i) => {
+                    const marca = String(t.marca || '').trim().toUpperCase();
+                    const modeloLimpo = String(m).replace(/\s+/g, '');
+                    lista.push({
+                        inversor: marca ? `${marca} - ${modeloLimpo}` : modeloLimpo,
+                        potencia: pot.length === 1 ? pot[0] : pot[i],
+                        corrente: cor.length === 1 ? cor[0] : cor[i],
+                        fonte_corrente: t.fonte_corrente,
+                        classe: t.classe,
+                        categoria: t.categoria
+                    });
+                });
+            });
+            return lista;
         }
 
         document.getElementById('btnExtrair').addEventListener('click', async () => {
