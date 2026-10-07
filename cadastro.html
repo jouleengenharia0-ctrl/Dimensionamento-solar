@@ -381,31 +381,32 @@
                 const pagina = await pdf.getPage(i);
                 const c = await pagina.getTextContent();
                 // Reconstrói linhas pela posição Y para preservar tabelas
+                // (ordena por Y e depois X: a ordem do fluxo do PDF embaralha colunas de tabela)
+                const itens = c.items.filter(it => it.str.trim())
+                    .map(it => ({ s: it.str.trim(), x: it.transform[4], y: it.transform[5] }))
+                    .sort((a, b) => (b.y - a.y) || (a.x - b.x));
                 const linhas = [];
-                let ultimoY = null, atual = '';
-                c.items.forEach(it => {
-                    const y = Math.round(it.transform[5]);
-                    if (ultimoY !== null && Math.abs(y - ultimoY) > 3) { linhas.push(atual); atual = ''; }
-                    atual += it.str + (it.hasEOL ? '' : ' | ');
-                    ultimoY = y;
+                let ultimoY = null, atual = [];
+                itens.forEach(it => {
+                    if (ultimoY !== null && Math.abs(it.y - ultimoY) > 3) { linhas.push(atual.join(' | ')); atual = []; }
+                    atual.push(it.s);
+                    ultimoY = it.y;
                 });
-                if (atual) linhas.push(atual);
+                if (atual.length) linhas.push(atual.join(' | '));
                 texto += `\n--- Página ${i} ---\n` + linhas.join('\n');
             }
-            if (texto.replace(/[\s|\-]|Página \d+/g, '').length > 300) {
-                return { texto, imagens: [] };
-            }
-            // PDF escaneado: renderiza até 6 páginas como imagem
+            const temTexto = texto.replace(/[\s|\-]|Página \d+/g, '').length > 300;
+            // Renderiza até 6 páginas como imagem — a IA lê a tabela visualmente (mais confiável que o texto)
             const imagens = [];
             for (let i = 1; i <= Math.min(pdf.numPages, 6); i++) {
                 const pagina = await pdf.getPage(i);
-                const vp = pagina.getViewport({ scale: 1.8 });
+                const vp = pagina.getViewport({ scale: 2.2 });
                 const canvas = document.createElement('canvas');
                 canvas.width = vp.width; canvas.height = vp.height;
                 await pagina.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-                imagens.push(canvas.toDataURL('image/jpeg', 0.85));
+                imagens.push(canvas.toDataURL('image/jpeg', 0.9));
             }
-            return { texto: '', imagens };
+            return { texto: temTexto ? texto : '', imagens };
         }
 
         const PROMPT_SISTEMA = `Você extrai dados de datasheets de inversores solares fotovoltaicos.
@@ -416,16 +417,16 @@ Para cada modelo retorne:
 - "corrente": número em A da corrente MÁXIMA de saída CA, ou seja, a linha "Max. AC output current", "Max. continuous AC output current", "Max. output current" ou "Corrente máxima de saída". NUNCA use a corrente nominal ("Rated AC output current" / "Nominal AC output current"), que é menor. A corrente máxima costuma ser maior que a nominal (ex: nominal 4,5 A -> máxima 5,5 A). Se o datasheet só trouxer a nominal, retorne null para "corrente". Se for micro com várias entradas, use a corrente de saída CA máxima total.
 - "classe": "MONOFÁSICO" ou "TRIFÁSICO" (pela saída CA: 1 fase/monofásico/single phase = MONOFÁSICO; 3 fases/three phase = TRIFÁSICO).
 - "categoria": "MICRO" se for microinversor (ex: vários MPPT/entradas individuais por módulo, famílias como Hoymiles HMS/HMT, APsystems, Deye SUN-M, Enphase), senão "TRADICIONAL".
+- "fonte_corrente": cópia literal do rótulo da linha do datasheet de onde tirou a corrente, com o valor (ex: "Max. AC output current (A): 5.5"). Sirva-se da coluna exata do modelo — confira que o valor pertence à coluna daquele modelo.
 Use null para o que não encontrar (não invente). Se houver mais de uma corrente por tensão, prefira a de 220 V/230 V em monofásicos e a de 380 V/400 V em trifásicos.
-Responda SOMENTE com JSON no formato: {"inversores":[{"inversor":"","potencia":0,"corrente":0,"classe":"","categoria":""}]}`;
+Responda SOMENTE com JSON no formato: {"inversores":[{"inversor":"","potencia":0,"corrente":0,"fonte_corrente":"","classe":"","categoria":""}]}`;
 
         async function chamarOpenAI(chave, modelo, conteudo) {
             const partes = [];
+            partes.push({ type: 'text', text: 'Páginas do datasheet (imagens) — a fonte principal; leia as tabelas visualmente, coluna por coluna:' });
+            conteudo.imagens.forEach(url => partes.push({ type: 'image_url', image_url: { url, detail: 'high' } }));
             if (conteudo.texto) {
-                partes.push({ type: 'text', text: 'Texto extraído do datasheet:\n' + conteudo.texto.slice(0, 120000) });
-            } else {
-                partes.push({ type: 'text', text: 'Páginas do datasheet (imagens):' });
-                conteudo.imagens.forEach(url => partes.push({ type: 'image_url', image_url: { url } }));
+                partes.push({ type: 'text', text: 'Texto extraído do mesmo PDF (apoio, a ordem das colunas pode estar embaralhada):\n' + conteudo.texto.slice(0, 60000) });
             }
             const resp = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
@@ -494,6 +495,13 @@ Responda SOMENTE com JSON no formato: {"inversores":[{"inversor":"","potencia":0
                 tr.querySelector('.r-nome').value = nome;
                 tr.querySelector('.r-pot').value = inv.potencia ?? '';
                 tr.querySelector('.r-cor').value = inv.corrente ?? '';
+                if (inv.fonte_corrente) {
+                    const f = document.createElement('span');
+                    f.className = 'aviso-existe';
+                    f.style.color = '#6c757d';
+                    f.textContent = inv.fonte_corrente;
+                    tr.querySelector('td:nth-child(4)').appendChild(f);
+                }
                 tr.querySelector('.r-classe').value = classe;
                 tr.querySelector('.r-cat').value = categoria;
                 if (jaExiste) {
