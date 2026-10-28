@@ -2502,24 +2502,25 @@
         let ultimaEntrada = null;
 
         // Monta o texto "ENTRADA / SOLAR" e o exibe no bloco de cópia.
-        // Se todas as linhas solares forem iguais, vira uma só ("SOLAR: ...");
+        // Se houver um só modelo, vira uma linha ("SOLAR: ...");
         // senão, cada uma é identificada pelo modelo/conjunto.
         function montarTextoCopia(linhasSolar) {
             const linhas = [];
             if (ultimaEntrada) {
-                linhas.push(`ENTRADA: ${ultimaEntrada.disjuntor} /-/ CABO ${String(ultimaEntrada.cabo).toUpperCase()}`);
+                // Evita "CABO CABO DE COBRE..." quando o texto da tabela já começa com "Cabo"
+                const caboEntrada = String(ultimaEntrada.cabo).replace(/^\s*cabo\s+/i, '');
+                linhas.push(`ENTRADA: ${String(ultimaEntrada.disjuntor).toUpperCase()} /-/ CABO ${caboEntrada.toUpperCase()}`);
             }
             const unicas = [];
             linhasSolar.forEach(l => {
                 if (!unicas.some(u => u.label === l.label && u.spec === l.spec)) unicas.push(l);
             });
-            const todasIguais = unicas.every(u => u.spec === unicas[0].spec);
-            if (unicas.length > 0) {
-                if (todasIguais) {
-                    linhas.push(`SOLAR: ${unicas[0].spec}`);
-                } else {
-                    unicas.forEach(u => linhas.push(`SOLAR (${u.label}): ${u.spec}`));
-                }
+            // Um único modelo/conjunto -> "SOLAR: ..."; mais de um (mesmo com
+            // especificação igual) -> uma linha por modelo, identificada.
+            if (unicas.length === 1) {
+                linhas.push(`SOLAR: ${unicas[0].spec}`);
+            } else {
+                unicas.forEach(u => linhas.push(`SOLAR (${u.label}): ${u.spec}`));
             }
             document.getElementById('textoCopia').textContent = linhas.join('\n');
             document.getElementById('copiaResultado').style.display = linhas.length ? 'block' : 'none';
