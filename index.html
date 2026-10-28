@@ -664,12 +664,6 @@
             },
             // SULGIPE (Energisa Sergipe) - Tabela 1: Dimensionamento do Padrão de Entrada, 220/127 V ou 230/115 V
             "SULGIPE": {
-                "MONOFASICO": [
-                    {min: 0, max: 3, classe: "M1", pd: 3},
-                    {min: 3.1, max: 5, classe: "M2", pd: 5},
-                    {min: 5.1, max: 6.5, classe: "M3", pd: 6.5},
-                    {min: 6.6, max: 8, classe: "M4", pd: 8}
-                ],
                 "BIFASICO": [
                     {min: 0, max: 6.5, classe: "B1", pd: 6.5},
                     {min: 6.6, max: 10, classe: "B2", pd: 10},
@@ -1254,38 +1248,6 @@
                 }
             },
             "SULGIPE": {
-                "M1": {
-                    "MONOFASICO": {
-                        disjuntor: "32A MONOPOLAR CURVA C",
-                        cabo: "4mm² CU (ramal de entrada)",
-                        ramal: "Ramal aéreo Al multiplex 1x1x10+10 mm² - Eletroduto 3/4 pol - Aterramento 4mm² CU",
-                        tipo: "CATEGORIA M1 - Monofásico 220/127V (0 < CI ≤ 3,0 kW)"
-                    }
-                },
-                "M2": {
-                    "MONOFASICO": {
-                        disjuntor: "40A MONOPOLAR CURVA C",
-                        cabo: "6mm² CU (ramal de entrada)",
-                        ramal: "Ramal aéreo Al multiplex 1x1x10+10 mm² - Eletroduto 3/4 pol - Aterramento 6mm² CU",
-                        tipo: "CATEGORIA M2 - Monofásico 220/127V (3,0 < CI ≤ 5,0 kW)"
-                    }
-                },
-                "M3": {
-                    "MONOFASICO": {
-                        disjuntor: "50A MONOPOLAR CURVA C",
-                        cabo: "10mm² CU (ramal de entrada)",
-                        ramal: "Ramal aéreo Al multiplex 1x1x10+10 mm² - Eletroduto 3/4 pol - Aterramento 10mm² CU",
-                        tipo: "CATEGORIA M3 - Monofásico 220/127V (5,0 < CI ≤ 6,5 kW)"
-                    }
-                },
-                "M4": {
-                    "MONOFASICO": {
-                        disjuntor: "63A MONOPOLAR CURVA C",
-                        cabo: "16mm² CU (ramal de entrada)",
-                        ramal: "Ramal aéreo Al multiplex 1x1x10+10 mm² - Eletroduto 3/4 pol - Aterramento 16mm² CU",
-                        tipo: "CATEGORIA M4 - Monofásico 220/127V (6,5 < CI ≤ 8,0 kW)"
-                    }
-                },
                 "B1": {
                     "BIFASICO": {
                         disjuntor: "32A BIPOLAR CURVA C",
@@ -1888,7 +1850,6 @@
             } else if (concessionaria === 'SULGIPE') {
                 const tensaoSel = document.getElementById('configTensao');
                 tensaoSel.innerHTML = `
-                    <option value="MONOFASICO">Monofásico (220/127V)</option>
                     <option value="BIFASICO">Bifásico (220/127V)</option>
                     <option value="TRIFASICO">Trifásico (220/127V)</option>
                 `;
