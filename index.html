@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -130,6 +130,7 @@
         .cemig { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border-left-color: #d35400; }
         .coelba { background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; border-left-color: #0e8a72; }
         .enel_ce { background: linear-gradient(135deg, #e84393 0%, #c2185b 100%); color: white; border-left-color: #8e0e46; }
+        .sulgipe { background: linear-gradient(135deg, #2d98da 0%, #0a5a9c 100%); color: white; border-left-color: #084a82; }
 
         .concessionaria-item {
             display: flex;
@@ -337,6 +338,7 @@
                         <option value="CEMIG">CEMIG (MG)</option>
                         <option value="COELBA">COELBA (BA)</option>
                         <option value="ENEL_CE">Enel CE</option>
+                        <option value="SULGIPE">SULGIPE (SE)</option>
                     </select>
                 </div>
 
@@ -658,6 +660,31 @@
                     {min: 40.1, max: 52, classe: "T10", pd: 52},
                     {min: 52.1, max: 66, classe: "T11", pd: 66},
                     {min: 66.1, max: 75, classe: "T12", pd: 75}
+                ]
+            },
+            // SULGIPE (Energisa Sergipe) - Tabela 1: Dimensionamento do Padrão de Entrada, 220/127 V ou 230/115 V
+            "SULGIPE": {
+                "MONOFASICO": [
+                    {min: 0, max: 3, classe: "M1", pd: 3},
+                    {min: 3.1, max: 5, classe: "M2", pd: 5},
+                    {min: 5.1, max: 6.5, classe: "M3", pd: 6.5},
+                    {min: 6.6, max: 8, classe: "M4", pd: 8}
+                ],
+                "BIFASICO": [
+                    {min: 0, max: 6.5, classe: "B1", pd: 6.5},
+                    {min: 6.6, max: 10, classe: "B2", pd: 10},
+                    {min: 10.1, max: 12.5, classe: "B3", pd: 12.5},
+                    {min: 12.6, max: 15, classe: "B4", pd: 15},
+                    {min: 15.1, max: 20, classe: "B5", pd: 20}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 15, classe: "T1", pd: 15},
+                    {min: 15.1, max: 23, classe: "T2", pd: 23},
+                    {min: 23.1, max: 27, classe: "T3", pd: 27},
+                    {min: 27.1, max: 38, classe: "T4", pd: 38},
+                    {min: 38.1, max: 47, classe: "T5", pd: 47},
+                    {min: 47.1, max: 57, classe: "T6", pd: 57},
+                    {min: 57.1, max: 76, classe: "T7", pd: 76}
                 ]
             },
             // Anexo F - Dimensionamento da Entrada de Serviço - Rede Aérea 220/380V (Enel CE)
@@ -1226,6 +1253,136 @@
                     }
                 }
             },
+            "SULGIPE": {
+                "M1": {
+                    "MONOFASICO": {
+                        disjuntor: "32A MONOPOLAR CURVA C",
+                        cabo: "4mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 1x1x10+10 mm² - Eletroduto 3/4 pol - Aterramento 4mm² CU",
+                        tipo: "CATEGORIA M1 - Monofásico 220/127V (0 < CI ≤ 3,0 kW)"
+                    }
+                },
+                "M2": {
+                    "MONOFASICO": {
+                        disjuntor: "40A MONOPOLAR CURVA C",
+                        cabo: "6mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 1x1x10+10 mm² - Eletroduto 3/4 pol - Aterramento 6mm² CU",
+                        tipo: "CATEGORIA M2 - Monofásico 220/127V (3,0 < CI ≤ 5,0 kW)"
+                    }
+                },
+                "M3": {
+                    "MONOFASICO": {
+                        disjuntor: "50A MONOPOLAR CURVA C",
+                        cabo: "10mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 1x1x10+10 mm² - Eletroduto 3/4 pol - Aterramento 10mm² CU",
+                        tipo: "CATEGORIA M3 - Monofásico 220/127V (5,0 < CI ≤ 6,5 kW)"
+                    }
+                },
+                "M4": {
+                    "MONOFASICO": {
+                        disjuntor: "63A MONOPOLAR CURVA C",
+                        cabo: "16mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 1x1x10+10 mm² - Eletroduto 3/4 pol - Aterramento 16mm² CU",
+                        tipo: "CATEGORIA M4 - Monofásico 220/127V (6,5 < CI ≤ 8,0 kW)"
+                    }
+                },
+                "B1": {
+                    "BIFASICO": {
+                        disjuntor: "32A BIPOLAR CURVA C",
+                        cabo: "6mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 2x1x10+10 mm² - Eletroduto 1 1/4 pol - Aterramento 6mm² CU",
+                        tipo: "CATEGORIA B1 - Bifásico 220/127V (0 < CI ≤ 6,5 kW)"
+                    }
+                },
+                "B2": {
+                    "BIFASICO": {
+                        disjuntor: "40A BIPOLAR CURVA C",
+                        cabo: "10mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 2x1x10+10 mm² - Eletroduto 1 1/4 pol - Aterramento 6mm² CU",
+                        tipo: "CATEGORIA B2 - Bifásico 220/127V (6,5 < CI ≤ 10 kW)"
+                    }
+                },
+                "B3": {
+                    "BIFASICO": {
+                        disjuntor: "50A BIPOLAR CURVA C",
+                        cabo: "10mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 2x1x16+16 mm² - Eletroduto 1 1/4 pol - Aterramento 10mm² CU",
+                        tipo: "CATEGORIA B3 - Bifásico 220/127V (10 < CI ≤ 12,5 kW)"
+                    }
+                },
+                "B4": {
+                    "BIFASICO": {
+                        disjuntor: "63A BIPOLAR CURVA C",
+                        cabo: "16mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 2x1x16+16 mm² - Eletroduto 1 1/2 pol - Aterramento 16mm² CU",
+                        tipo: "CATEGORIA B4 - Bifásico 220/127V (12,5 < CI ≤ 15 kW)"
+                    }
+                },
+                "B5": {
+                    "BIFASICO": {
+                        disjuntor: "70A BIPOLAR CURVA C",
+                        cabo: "25mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 2x1x25+25 mm² - Eletroduto 1 1/2 pol - Aterramento 16mm² CU",
+                        tipo: "CATEGORIA B5 - Bifásico 220/127V (15 < CI ≤ 20 kW)"
+                    }
+                },
+                "T1": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "10mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 3x1x10+10 mm² - Eletroduto 2 pol - Aterramento 10mm² CU",
+                        tipo: "CATEGORIA T1 - Trifásico 220/127V (0 < D ≤ 15 kVA)"
+                    }
+                },
+                "T2": {
+                    "TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 3x1x16+16 mm² - Eletroduto 2 pol - Aterramento 16mm² CU",
+                        tipo: "CATEGORIA T2 - Trifásico 220/127V (15 < D ≤ 23 kVA)"
+                    }
+                },
+                "T3": {
+                    "TRIFASICO": {
+                        disjuntor: "70A TRIPOLAR CURVA C",
+                        cabo: "25mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 3x1x25+25 mm² - Eletroduto 2 1/2 pol - Aterramento 16mm² CU",
+                        tipo: "CATEGORIA T3 - Trifásico 220/127V (23 < D ≤ 27 kVA)"
+                    }
+                },
+                "T4": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 3x1x35+35 mm² - Eletroduto 3 pol - Aterramento 16mm² CU",
+                        tipo: "CATEGORIA T4 - Trifásico 220/127V (27 < D ≤ 38 kVA)"
+                    }
+                },
+                "T5": {
+                    "TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "50mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 3x1x50+50 mm² - Eletroduto 3 pol - Aterramento 25mm² CU",
+                        tipo: "CATEGORIA T5 - Trifásico 220/127V (38 < D ≤ 47 kVA)"
+                    }
+                },
+                "T6": {
+                    "TRIFASICO": {
+                        disjuntor: "150A TRIPOLAR CURVA C",
+                        cabo: "70mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 3x1x70+70 mm² - Eletroduto 3 1/2 pol - Aterramento 35mm² CU",
+                        tipo: "CATEGORIA T6 - Trifásico 220/127V (47 < D ≤ 57 kVA)"
+                    }
+                },
+                "T7": {
+                    "TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "95mm² CU (ramal de entrada)",
+                        ramal: "Ramal aéreo Al multiplex 3x1x70+70 mm² - Eletroduto 4 pol - Aterramento 50mm² CU",
+                        tipo: "CATEGORIA T7 - Trifásico 220/127V (57 < D ≤ 76 kVA)"
+                    }
+                }
+            },
             "ENEL_CE": {
                 "A1": {
                     "MONOFASICO": {
@@ -1728,6 +1885,13 @@
                 const tensaoSel = document.getElementById('configTensao');
                 const rede = document.getElementById('configRedeCoelba').value;
                 updateCoelbaTensaoOptions(rede);
+            } else if (concessionaria === 'SULGIPE') {
+                const tensaoSel = document.getElementById('configTensao');
+                tensaoSel.innerHTML = `
+                    <option value="MONOFASICO">Monofásico (220/127V)</option>
+                    <option value="BIFASICO">Bifásico (220/127V)</option>
+                    <option value="TRIFASICO">Trifásico (220/127V)</option>
+                `;
             } else if (concessionaria === 'ENEL_CE') {
                 const tensaoSel = document.getElementById('configTensao');
                 tensaoSel.innerHTML = `
