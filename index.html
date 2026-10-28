@@ -302,6 +302,12 @@
             color: #2c3e50;
         }
 
+        .copia-resultado { background: #f4f8fb; border: 1px solid #cfe0ee; border-radius: 10px; padding: 14px 16px; margin: 16px 0; }
+        .copia-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .copia-header h4 { margin: 0; color: #2c3e50; }
+        .copia-header button { background: #2d98da; color: #fff; border: none; border-radius: 6px; padding: 8px 16px; font-weight: 600; cursor: pointer; }
+        .copia-header button:hover { background: #0a5a9c; }
+        .copia-resultado pre { margin: 0; white-space: pre-wrap; word-break: break-word; font-family: Consolas, monospace; font-size: 0.9em; color: #2c3e50; }
         .protecao-individual {
             background: #fff3e0;
             border: 1px solid #ffb74d;
@@ -509,6 +515,15 @@
                         <!-- Detalhes de proteção aparecerão aqui -->
                     </div>
                 </div>
+            </div>
+
+            <!-- Texto pronto para copiar (Entrada + Solar) -->
+            <div id="copiaResultado" class="copia-resultado" style="display: none;">
+                <div class="copia-header">
+                    <h4>📋 Resultado para copiar</h4>
+                    <button type="button" id="btnCopiarResultado">Copiar</button>
+                </div>
+                <pre id="textoCopia"></pre>
             </div>
 
             <div id="inversoresDetails"></div>
@@ -1251,7 +1266,7 @@
                 "B1": {
                     "BIFASICO": {
                         disjuntor: "32A BIPOLAR CURVA C",
-                        cabo: "6mm² CU (ramal de entrada)",
+                        cabo: "6mm² CU",
                         ramal: "Ramal aéreo Al multiplex 2x1x10+10 mm² - Eletroduto 1 1/4 pol - Aterramento 6mm² CU",
                         tipo: "CATEGORIA B1 - Bifásico 220/127V (0 < CI ≤ 6,5 kW)"
                     }
@@ -1259,7 +1274,7 @@
                 "B2": {
                     "BIFASICO": {
                         disjuntor: "40A BIPOLAR CURVA C",
-                        cabo: "10mm² CU (ramal de entrada)",
+                        cabo: "10mm² CU",
                         ramal: "Ramal aéreo Al multiplex 2x1x10+10 mm² - Eletroduto 1 1/4 pol - Aterramento 6mm² CU",
                         tipo: "CATEGORIA B2 - Bifásico 220/127V (6,5 < CI ≤ 10 kW)"
                     }
@@ -1267,7 +1282,7 @@
                 "B3": {
                     "BIFASICO": {
                         disjuntor: "50A BIPOLAR CURVA C",
-                        cabo: "10mm² CU (ramal de entrada)",
+                        cabo: "10mm² CU",
                         ramal: "Ramal aéreo Al multiplex 2x1x16+16 mm² - Eletroduto 1 1/4 pol - Aterramento 10mm² CU",
                         tipo: "CATEGORIA B3 - Bifásico 220/127V (10 < CI ≤ 12,5 kW)"
                     }
@@ -1275,7 +1290,7 @@
                 "B4": {
                     "BIFASICO": {
                         disjuntor: "63A BIPOLAR CURVA C",
-                        cabo: "16mm² CU (ramal de entrada)",
+                        cabo: "16mm² CU",
                         ramal: "Ramal aéreo Al multiplex 2x1x16+16 mm² - Eletroduto 1 1/2 pol - Aterramento 16mm² CU",
                         tipo: "CATEGORIA B4 - Bifásico 220/127V (12,5 < CI ≤ 15 kW)"
                     }
@@ -1283,7 +1298,7 @@
                 "B5": {
                     "BIFASICO": {
                         disjuntor: "70A BIPOLAR CURVA C",
-                        cabo: "25mm² CU (ramal de entrada)",
+                        cabo: "25mm² CU",
                         ramal: "Ramal aéreo Al multiplex 2x1x25+25 mm² - Eletroduto 1 1/2 pol - Aterramento 16mm² CU",
                         tipo: "CATEGORIA B5 - Bifásico 220/127V (15 < CI ≤ 20 kW)"
                     }
@@ -1291,7 +1306,7 @@
                 "T1": {
                     "TRIFASICO": {
                         disjuntor: "40A TRIPOLAR CURVA C",
-                        cabo: "10mm² CU (ramal de entrada)",
+                        cabo: "10mm² CU",
                         ramal: "Ramal aéreo Al multiplex 3x1x10+10 mm² - Eletroduto 2 pol - Aterramento 10mm² CU",
                         tipo: "CATEGORIA T1 - Trifásico 220/127V (0 < D ≤ 15 kVA)"
                     }
@@ -1299,7 +1314,7 @@
                 "T2": {
                     "TRIFASICO": {
                         disjuntor: "63A TRIPOLAR CURVA C",
-                        cabo: "16mm² CU (ramal de entrada)",
+                        cabo: "16mm² CU",
                         ramal: "Ramal aéreo Al multiplex 3x1x16+16 mm² - Eletroduto 2 pol - Aterramento 16mm² CU",
                         tipo: "CATEGORIA T2 - Trifásico 220/127V (15 < D ≤ 23 kVA)"
                     }
@@ -1307,7 +1322,7 @@
                 "T3": {
                     "TRIFASICO": {
                         disjuntor: "70A TRIPOLAR CURVA C",
-                        cabo: "25mm² CU (ramal de entrada)",
+                        cabo: "25mm² CU",
                         ramal: "Ramal aéreo Al multiplex 3x1x25+25 mm² - Eletroduto 2 1/2 pol - Aterramento 16mm² CU",
                         tipo: "CATEGORIA T3 - Trifásico 220/127V (23 < D ≤ 27 kVA)"
                     }
@@ -1315,7 +1330,7 @@
                 "T4": {
                     "TRIFASICO": {
                         disjuntor: "100A TRIPOLAR CURVA C",
-                        cabo: "35mm² CU (ramal de entrada)",
+                        cabo: "35mm² CU",
                         ramal: "Ramal aéreo Al multiplex 3x1x35+35 mm² - Eletroduto 3 pol - Aterramento 16mm² CU",
                         tipo: "CATEGORIA T4 - Trifásico 220/127V (27 < D ≤ 38 kVA)"
                     }
@@ -1323,7 +1338,7 @@
                 "T5": {
                     "TRIFASICO": {
                         disjuntor: "125A TRIPOLAR CURVA C",
-                        cabo: "50mm² CU (ramal de entrada)",
+                        cabo: "50mm² CU",
                         ramal: "Ramal aéreo Al multiplex 3x1x50+50 mm² - Eletroduto 3 pol - Aterramento 25mm² CU",
                         tipo: "CATEGORIA T5 - Trifásico 220/127V (38 < D ≤ 47 kVA)"
                     }
@@ -1331,7 +1346,7 @@
                 "T6": {
                     "TRIFASICO": {
                         disjuntor: "150A TRIPOLAR CURVA C",
-                        cabo: "70mm² CU (ramal de entrada)",
+                        cabo: "70mm² CU",
                         ramal: "Ramal aéreo Al multiplex 3x1x70+70 mm² - Eletroduto 3 1/2 pol - Aterramento 35mm² CU",
                         tipo: "CATEGORIA T6 - Trifásico 220/127V (47 < D ≤ 57 kVA)"
                     }
@@ -1339,7 +1354,7 @@
                 "T7": {
                     "TRIFASICO": {
                         disjuntor: "200A TRIPOLAR CURVA C",
-                        cabo: "95mm² CU (ramal de entrada)",
+                        cabo: "95mm² CU",
                         ramal: "Ramal aéreo Al multiplex 3x1x70+70 mm² - Eletroduto 4 pol - Aterramento 50mm² CU",
                         tipo: "CATEGORIA T7 - Trifásico 220/127V (57 < D ≤ 76 kVA)"
                     }
@@ -2325,6 +2340,7 @@
             resultsDiv.style.display = 'block';
 
             // Exibir informações de proteção individual dos inversores
+            ultimaEntrada = configClasse || null;
             renderProtecaoIndividual();
         }
 
@@ -2349,6 +2365,15 @@
                     grupo.forEach(inv => faseDoInversor.set(inv.id, nomesFase[i]));
                 });
             }
+
+            // Linhas "SOLAR" para o texto de cópia: {label, spec}
+            const linhasSolar = [];
+            const polosSolar = (classeInv) => {
+                if (classeInv === 'TRIFÁSICO') return 'TRIPOLAR';
+                return config.includes('BIFASICO') ? 'BIPOLAR' : 'MONOPOLAR';
+            };
+            const specSolar = (disj, cabo, classeInv) =>
+                `${typeof disj === 'number' ? disj + 'A' : 'VERIFICAR'} ${polosSolar(classeInv)} CURVA C /-/ CABO ${String(cabo).toUpperCase()} - 750V - PVC`;
 
             function renderCard(inversor, numero, extraLabel) {
                 const div = document.createElement('div');
@@ -2383,6 +2408,7 @@
                     </div>
                 `;
                 container.appendChild(div);
+                linhasSolar.push({ label: inversor.inversor, spec: specSolar(disjuntorIndividual, cabosIndividual, inversor.classe) });
             }
 
             selectedInversors.forEach((inversor, index) => {
@@ -2429,6 +2455,8 @@
                         </div>
                     `;
                     container.appendChild(div);
+                    const modelosConj = [...new Set(micros.map(m => m.inversor))].join(' + ');
+                    linhasSolar.push({ label: `CONJUNTO DE ${micros.length} MICROS ${modelosConj}`, spec: specSolar(disjuntorConjunto, cabosConjunto, 'MONOFÁSICO') });
                 }
             }
 
@@ -2462,11 +2490,57 @@
                         </div>
                     `;
                     container.appendChild(div);
+                    linhasSolar.push({ label: `${nomesFase[i].toUpperCase()} - ${grupo.length} MICROS ${grupo[0].inversor}`, spec: specSolar(disjuntorGrupo, cabosGrupo, 'MONOFÁSICO') });
                 });
             }
 
             protecaoInversoresDiv.style.display = 'block';
+            montarTextoCopia(linhasSolar);
         }
+
+        // Entrada atual (configClasse do último cálculo) usada no texto de cópia
+        let ultimaEntrada = null;
+
+        // Monta o texto "ENTRADA / SOLAR" e o exibe no bloco de cópia.
+        // Se todas as linhas solares forem iguais, vira uma só ("SOLAR: ...");
+        // senão, cada uma é identificada pelo modelo/conjunto.
+        function montarTextoCopia(linhasSolar) {
+            const linhas = [];
+            if (ultimaEntrada) {
+                linhas.push(`ENTRADA: ${ultimaEntrada.disjuntor} /-/ CABO ${String(ultimaEntrada.cabo).toUpperCase()}`);
+            }
+            const unicas = [];
+            linhasSolar.forEach(l => {
+                if (!unicas.some(u => u.label === l.label && u.spec === l.spec)) unicas.push(l);
+            });
+            const todasIguais = unicas.every(u => u.spec === unicas[0].spec);
+            if (unicas.length > 0) {
+                if (todasIguais) {
+                    linhas.push(`SOLAR: ${unicas[0].spec}`);
+                } else {
+                    unicas.forEach(u => linhas.push(`SOLAR (${u.label}): ${u.spec}`));
+                }
+            }
+            document.getElementById('textoCopia').textContent = linhas.join('\n');
+            document.getElementById('copiaResultado').style.display = linhas.length ? 'block' : 'none';
+        }
+
+        document.getElementById('btnCopiarResultado').addEventListener('click', async function() {
+            const btn = this;
+            const texto = document.getElementById('textoCopia').textContent;
+            try {
+                await navigator.clipboard.writeText(texto);
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = texto;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            btn.textContent = '✅ Copiado!';
+            setTimeout(() => { btn.textContent = 'Copiar'; }, 1500);
+        });
 
         // Função para limpar resultados
         function clearResults() {
@@ -2474,6 +2548,7 @@
             demandaInfoDiv.style.display = 'none';
             concessionariaInfoDiv.style.display = 'none';
             protecaoInversoresDiv.style.display = 'none';
+            document.getElementById('copiaResultado').style.display = 'none';
             cargaNecessariaInfo.style.display = 'none';
             autoAdjustMessage.style.display = 'none';
             document.getElementById('semClasseAviso').style.display = 'none';
