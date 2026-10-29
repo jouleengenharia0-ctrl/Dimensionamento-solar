@@ -704,13 +704,13 @@
                     {min: 8.1, max: 10, classe: "A3", pd: 10}
                 ],
                 "BIFASICO": [
-                    {min: 10.1, max: 20, classe: "B1", pd: 20}
+                    {min: 0, max: 20, classe: "B1", pd: 20}
                 ],
                 "TRIFASICO": [
                     {min: 0, max: 19, classe: "C1", pd: 19},
                     {min: 19.1, max: 21, classe: "C2", pd: 21},
                     {min: 21.1, max: 27, classe: "C3", pd: 27},
-                    {min: 30.1, max: 37, classe: "C4", pd: 37},
+                    {min: 27.1, max: 37, classe: "C4", pd: 37},
                     {min: 37.1, max: 47, classe: "C5", pd: 47},
                     {min: 47.1, max: 60, classe: "C6", pd: 60},
                     {min: 60.1, max: 75, classe: "C7", pd: 75}
@@ -1365,7 +1365,7 @@
                     "MONOFASICO": {
                         disjuntor: "20A MONOPOLAR CURVA C",
                         cabo: "6mm² CU",
-                        ramal: "Ramal de conexão 6+6mm² CU - Ponto de conexão: Medidor",
+                        ramal: "Ramal de conexão 6+6mm² CU (eletroduto PVC 50mm) - Aterramento 6mm² CU (eletroduto 20mm) - Ponto de conexão: Medidor",
                         tipo: "CATEGORIA A1 - Monofásico 220/380V (até 5kW)"
                     }
                 },
@@ -1373,7 +1373,7 @@
                     "MONOFASICO": {
                         disjuntor: "32A MONOPOLAR CURVA C",
                         cabo: "6mm² CU",
-                        ramal: "Ramal de conexão 6+6mm² CU - Ponto de conexão: Medidor",
+                        ramal: "Ramal de conexão 6+6mm² CU (eletroduto PVC 50mm) - Aterramento 6mm² CU (eletroduto 20mm) - Ponto de conexão: Medidor",
                         tipo: "CATEGORIA A2 - Monofásico 220/380V (5,1 a 8kW)"
                     }
                 },
@@ -1381,7 +1381,7 @@
                     "MONOFASICO": {
                         disjuntor: "40A MONOPOLAR CURVA C",
                         cabo: "10mm² CU",
-                        ramal: "Ramal de conexão 10+10mm² CU - Ponto de conexão: Medidor",
+                        ramal: "Ramal de conexão 10+10mm² CU (eletroduto PVC 50mm) - Aterramento 10mm² CU (eletroduto 20mm) - Ponto de conexão: Medidor",
                         tipo: "CATEGORIA A3 - Monofásico 220/380V (8,1 a 10kW)"
                     }
                 },
@@ -1389,23 +1389,23 @@
                     "BIFASICO": {
                         disjuntor: "50A BIPOLAR CURVA C",
                         cabo: "16mm² CU",
-                        ramal: "Ramal de conexão 2x16+16mm² CU - Ponto de conexão: Medidor",
-                        tipo: "CATEGORIA B1 - Bifásico 220/380V (10,1 a 20kW)"
+                        ramal: "Ramal de conexão 2x16+16mm² CU (eletroduto PVC 50mm) - Aterramento 16mm² CU (eletroduto 20mm) - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA B1 - Bifásico 220/380V (até 20kW)"
                     }
                 },
                 "C1": {
                     "TRIFASICO": {
                         disjuntor: "25A TRIPOLAR CURVA C",
                         cabo: "6mm² CU",
-                        ramal: "Ramal de conexão 3x6+6mm² CU - Ponto de conexão: Medidor",
-                        tipo: "CATEGORIA C1 - Trifásico 220/380V"
+                        ramal: "Ramal de conexão 3x6+6mm² CU (eletroduto PVC 60mm) - Aterramento 16mm² CU (eletroduto 20mm) - Ponto de conexão: Medidor",
+                        tipo: "CATEGORIA C1 - Trifásico 220/380V (até 19kW)"
                     }
                 },
                 "C2": {
                     "TRIFASICO": {
                         disjuntor: "32A TRIPOLAR CURVA C",
                         cabo: "10mm² CU",
-                        ramal: "Ramal de conexão 3x10+10mm² CU - Ponto de conexão: Medidor",
+                        ramal: "Ramal de conexão 3x10+10mm² CU (eletroduto PVC 60mm) - Aterramento 16mm² CU (eletroduto 20mm) - Ponto de conexão: Medidor",
                         tipo: "CATEGORIA C2 - Trifásico 220/380V (19,1 a 21kW)"
                     }
                 },
@@ -1413,7 +1413,7 @@
                     "TRIFASICO": {
                         disjuntor: "40A TRIPOLAR CURVA C",
                         cabo: "10mm² CU",
-                        ramal: "Ramal de conexão 3x10+10mm² CU - Ponto de conexão: Medidor",
+                        ramal: "Ramal de conexão 3x10+10mm² CU (eletroduto PVC 60mm) - Aterramento 16mm² CU (eletroduto 20mm) - Ponto de conexão: Medidor",
                         tipo: "CATEGORIA C3 - Trifásico 220/380V (21,1 a 27kW)"
                     }
                 },
@@ -1421,15 +1421,15 @@
                     "TRIFASICO": {
                         disjuntor: "50A TRIPOLAR CURVA C",
                         cabo: "16mm² CU",
-                        ramal: "Ramal de entrada 3x16+16mm² CU - Ponto de conexão: Poste (instalação por conta do consumidor)",
-                        tipo: "CATEGORIA C4 - Trifásico 220/380V (30,1 a 37kW)"
+                        ramal: "Ramal de entrada 3x16+16mm² CU (eletroduto PVC 60mm, instalação por conta do consumidor) - Aterramento 16mm² CU (eletroduto 20mm) - Ponto de conexão: Poste",
+                        tipo: "CATEGORIA C4 - Trifásico 220/380V (27,1 a 37kW)"
                     }
                 },
                 "C5": {
                     "TRIFASICO": {
                         disjuntor: "63A TRIPOLAR CURVA C",
                         cabo: "16mm² CU",
-                        ramal: "Ramal de entrada 3x16+16mm² CU - Ponto de conexão: Poste (instalação por conta do consumidor)",
+                        ramal: "Ramal de entrada 3x16+16mm² CU (eletroduto PVC 60mm, instalação por conta do consumidor) - Aterramento 16mm² CU (eletroduto 20mm) - Ponto de conexão: Poste",
                         tipo: "CATEGORIA C5 - Trifásico 220/380V (37,1 a 47kW)"
                     }
                 },
@@ -1437,15 +1437,15 @@
                     "TRIFASICO": {
                         disjuntor: "80A TRIPOLAR CURVA C",
                         cabo: "25mm² CU",
-                        ramal: "Ramal de entrada 3x35+54,5mm² CU - Ponto de conexão: Poste (instalação por conta do consumidor)",
+                        ramal: "Ramal de entrada 3x35+54,5mm² CU (eletroduto PVC 60mm, instalação por conta do consumidor) - Aterramento 16mm² CU (eletroduto 20mm) - Ponto de conexão: Poste",
                         tipo: "CATEGORIA C6 - Trifásico 220/380V (47,1 a 60kW)"
                     }
                 },
                 "C7": {
                     "TRIFASICO": {
                         disjuntor: "100A TRIPOLAR CURVA C",
-                        cabo: "35mm² CU",
-                        ramal: "Ramal de entrada 3x35+54,5mm² CU - Ponto de conexão: Poste (instalação por conta do consumidor)",
+                        cabo: "35mm² CU (neutro 25mm²)",
+                        ramal: "Ramal de entrada 3x35+54,5mm² CU (eletroduto PVC 60mm, instalação por conta do consumidor) - Aterramento 16mm² CU (eletroduto 20mm) - Ponto de conexão: Poste",
                         tipo: "CATEGORIA C7 - Trifásico 220/380V (60,1 a 75kW)"
                     }
                 }
