@@ -1766,14 +1766,14 @@
 
             // Escolha de proteção: dois cenários possíveis, mutuamente exclusivos
             // (config nunca é mono e trifásico ao mesmo tempo).
-            // 1) CELPE/COSERN em rede monofásica com 2+ micros: disjuntor único
+            // 1) CELPE/COSERN e ENERGISA PB em rede monofásica com 2+ micros: disjuntor único
             //    para todos x individual para cada.
             // 2) Rede trifásica com micros monofásicos em quantidade múltipla de
             //    3 e todos do mesmo modelo: individual x agrupado por fase (N
             //    micros por circuito, 3 circuitos) — só funciona com modelo
             //    igual porque divide um disjuntor/condutor comum entre eles.
             let modoDisponivel = null;
-            if (concessionaria === 'CELPE' && isMono && micros.length >= 2) {
+            if ((concessionaria === 'CELPE' || concessionaria === 'ENERGISA_PB') && isMono && micros.length >= 2) {
                 modoDisponivel = 'unico';
                 document.getElementById('microProtecaoLabel').textContent = '🔀 Proteção dos Microinversores:';
                 microProtecaoTipo.innerHTML = `
@@ -2511,19 +2511,12 @@
                 const caboEntrada = String(ultimaEntrada.cabo).replace(/^\s*cabo\s+/i, '');
                 linhas.push(`ENTRADA: ${String(ultimaEntrada.disjuntor).toUpperCase()} /-/ CABO ${caboEntrada.toUpperCase()}`);
             }
-            // Agrupa linhas idênticas (mesmo modelo + especificação) contando a quantidade.
-            const unicas = [];
-            linhasSolar.forEach(l => {
-                const igual = unicas.find(u => u.label === l.label && u.spec === l.spec);
-                if (igual) igual.qtd++; else unicas.push({ label: l.label, spec: l.spec, qtd: 1 });
-            });
-            // Um único modelo/conjunto em quantidade 1 -> "SOLAR: ...";
-            // caso contrário uma linha por modelo, com a quantidade quando > 1
-            // (cada unidade tem a proteção indicada).
-            if (unicas.length === 1 && unicas[0].qtd === 1) {
-                linhas.push(`SOLAR: ${unicas[0].spec}`);
+            // Um único item -> "SOLAR: ..."; mais de um -> uma linha por
+            // inversor/conjunto (mesmo que o modelo se repita), com o modelo.
+            if (linhasSolar.length === 1) {
+                linhas.push(`SOLAR: ${linhasSolar[0].spec}`);
             } else {
-                unicas.forEach(u => linhas.push(`SOLAR (${u.qtd > 1 ? u.qtd + 'x ' : ''}${u.label}): ${u.spec}`));
+                linhasSolar.forEach(l => linhas.push(`SOLAR (${l.label}): ${l.spec}`));
             }
             document.getElementById('textoCopia').textContent = linhas.join('\n');
             document.getElementById('copiaResultado').style.display = linhas.length ? 'block' : 'none';
