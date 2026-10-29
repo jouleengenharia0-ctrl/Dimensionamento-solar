@@ -2511,16 +2511,19 @@
                 const caboEntrada = String(ultimaEntrada.cabo).replace(/^\s*cabo\s+/i, '');
                 linhas.push(`ENTRADA: ${String(ultimaEntrada.disjuntor).toUpperCase()} /-/ CABO ${caboEntrada.toUpperCase()}`);
             }
+            // Agrupa linhas idênticas (mesmo modelo + especificação) contando a quantidade.
             const unicas = [];
             linhasSolar.forEach(l => {
-                if (!unicas.some(u => u.label === l.label && u.spec === l.spec)) unicas.push(l);
+                const igual = unicas.find(u => u.label === l.label && u.spec === l.spec);
+                if (igual) igual.qtd++; else unicas.push({ label: l.label, spec: l.spec, qtd: 1 });
             });
-            // Um único modelo/conjunto -> "SOLAR: ..."; mais de um (mesmo com
-            // especificação igual) -> uma linha por modelo, identificada.
-            if (unicas.length === 1) {
+            // Um único modelo/conjunto em quantidade 1 -> "SOLAR: ...";
+            // caso contrário uma linha por modelo, com a quantidade quando > 1
+            // (cada unidade tem a proteção indicada).
+            if (unicas.length === 1 && unicas[0].qtd === 1) {
                 linhas.push(`SOLAR: ${unicas[0].spec}`);
             } else {
-                unicas.forEach(u => linhas.push(`SOLAR (${u.label}): ${u.spec}`));
+                unicas.forEach(u => linhas.push(`SOLAR (${u.qtd > 1 ? u.qtd + 'x ' : ''}${u.label}): ${u.spec}`));
             }
             document.getElementById('textoCopia').textContent = linhas.join('\n');
             document.getElementById('copiaResultado').style.display = linhas.length ? 'block' : 'none';
