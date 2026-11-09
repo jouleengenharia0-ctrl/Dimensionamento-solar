@@ -130,6 +130,7 @@
         .cemig { background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border-left-color: #d35400; }
         .coelba { background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; border-left-color: #0e8a72; }
         .enel_ce { background: linear-gradient(135deg, #e84393 0%, #c2185b 100%); color: white; border-left-color: #8e0e46; }
+        .energisa_se { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; border-left-color: #008f7a; }
         .sulgipe { background: linear-gradient(135deg, #2d98da 0%, #0a5a9c 100%); color: white; border-left-color: #084a82; }
 
         .concessionaria-item {
@@ -344,6 +345,7 @@
                         <option value="CEMIG">CEMIG (MG)</option>
                         <option value="COELBA">COELBA (BA)</option>
                         <option value="ENEL_CE">Enel CE</option>
+                        <option value="ENERGISA_SE">ENERGISA SE (127/220V)</option>
                         <option value="SULGIPE">SULGIPE (SE)</option>
                     </select>
                 </div>
@@ -675,6 +677,22 @@
                     {min: 40.1, max: 52, classe: "T10", pd: 52},
                     {min: 52.1, max: 66, classe: "T11", pd: 66},
                     {min: 66.1, max: 75, classe: "T12", pd: 75}
+                ]
+            },
+            // ENERGISA SE (127/220V) - Tabela 16: Dimensionamento das categorias de atendimento
+            "ENERGISA_SE": {
+                "BIFASICO": [
+                    {min: 0, max: 10.1, classe: "B1", pd: 10.1},
+                    {min: 10.2, max: 12.7, classe: "B2", pd: 12.7},
+                    {min: 12.8, max: 17.7, classe: "B3", pd: 17.7}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 15.2, classe: "T1", pd: 15.2},
+                    {min: 15.3, max: 19, classe: "T2", pd: 19},
+                    {min: 19.1, max: 26.6, classe: "T3", pd: 26.6},
+                    {min: 26.7, max: 38.1, classe: "T4", pd: 38.1},
+                    {min: 38.2, max: 57.1, classe: "T5", pd: 57.1},
+                    {min: 57.2, max: 81.5, classe: "T6", pd: 81.5}
                 ]
             },
             // SULGIPE (Energisa Sergipe) - Tabela 1: Dimensionamento do Padrão de Entrada, 220/127 V ou 230/115 V
@@ -1259,6 +1277,80 @@
                         cabo: "50mm² - 1KV - XLPE",
                         ramal: "3x50+50 CU XLPE",
                         tipo: "CATEGORIA T12 - Trifásico 220/380V"
+                    }
+                }
+            },
+            "ENERGISA_SE": {
+                "B1": {
+                    "BIFASICO": {
+                        disjuntor: "50A BIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 10mm² (neutro 10mm²), concêntrico 10mm² - Ramal de entrada Cu: XLPE/EPR 90°C fase 10mm² e neutro 10mm² (PVC 70°C 10/10mm²) - Aterramento 10mm² (haste 1H) - Eletroduto 3/4 pol",
+                        tipo: "CATEGORIA B1 - Bifásico 127/220V (0 < C ≤ 10,1kW)"
+                    }
+                },
+                "B2": {
+                    "BIFASICO": {
+                        disjuntor: "63A BIPOLAR CURVA C",
+                        cabo: "10(16)mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 16mm² (neutro 16mm²) - Ramal de entrada Cu: XLPE/EPR 90°C fase 10(16)mm² e neutro 10(16)mm² (PVC 70°C 16/16mm²) - Aterramento 10 ou 16mm² (haste 1H) - Eletroduto 1 pol",
+                        tipo: "CATEGORIA B2 - Bifásico 127/220V (10,1 < C ≤ 12,7kW)"
+                    }
+                },
+                "B3": {
+                    "BIFASICO": {
+                        disjuntor: "80A BIPOLAR CURVA C",
+                        cabo: "16(25)mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 25mm² (neutro 25mm²) - Ramal de entrada Cu: XLPE/EPR 90°C fase 16(25)mm² e neutro 16(25)mm² (PVC 70°C 25/25mm²) - Aterramento 16mm² (haste 1H) - Eletroduto 1 1/4 pol",
+                        tipo: "CATEGORIA B3 - Bifásico 127/220V (12,7 < C ≤ 17,7kW)"
+                    }
+                },
+                "T1": {
+                    "TRIFASICO": {
+                        disjuntor: "40A TRIPOLAR CURVA C",
+                        cabo: "6(10)mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 10mm² (neutro 10mm²) - Ramal de entrada Cu: XLPE/EPR 90°C fase 6(10)mm² e neutro 6(10)mm² (PVC 70°C 10/10mm²) - Aterramento 10mm² (haste 3H) - Eletroduto 3/4 pol",
+                        tipo: "CATEGORIA T1 - Trifásico 127/220V (0 < D ≤ 15,2kVA)"
+                    }
+                },
+                "T2": {
+                    "TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "10mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 16mm² (neutro 16mm²) - Ramal de entrada Cu: XLPE/EPR 90°C fase 10mm² e neutro 10mm² (PVC 70°C 16/16mm²) - Aterramento 10 ou 16mm² (haste 3H) - Eletroduto 1 pol",
+                        tipo: "CATEGORIA T2 - Trifásico 127/220V (15,2 < D ≤ 19,0kVA)"
+                    }
+                },
+                "T3": {
+                    "TRIFASICO": {
+                        disjuntor: "70A TRIPOLAR CURVA C",
+                        cabo: "16(25)mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 25mm² (neutro 25mm²) - Ramal de entrada Cu: XLPE/EPR 90°C fase 16(25)mm² e neutro 16(25)mm² (PVC 70°C 25/25mm²) - Aterramento 16mm² (haste 3H) - Eletroduto 1 1/4 pol",
+                        tipo: "CATEGORIA T3 - Trifásico 127/220V (19,0 < D ≤ 26,6kVA)"
+                    }
+                },
+                "T4": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "25(35)mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 35mm² (neutro 25mm²) - Ramal de entrada Cu: XLPE/EPR 90°C fase 25(35)mm² e neutro 25mm² - Aterramento 16mm² (haste 3H) - Eletroduto 1 1/2 pol",
+                        tipo: "CATEGORIA T4 - Trifásico 127/220V (26,6 < D ≤ 38,1kVA)"
+                    }
+                },
+                "T5": {
+                    "TRIFASICO": {
+                        disjuntor: "150A TRIPOLAR CURVA C",
+                        cabo: "50(70)mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 70mm² (neutro 35mm²) - Ramal de entrada Cu: XLPE/EPR 90°C fase 50(70)mm² e neutro 25(35)mm² - Aterramento 25(35)mm² (haste 3H) - Eletroduto 2 pol",
+                        tipo: "CATEGORIA T5 - Trifásico 127/220V (38,1 < D ≤ 57,1kVA)"
+                    }
+                },
+                "T6": {
+                    "TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "95mm² - 1KV - XLPE",
+                        ramal: "Ramal de conexão Al multiplex 120mm² (neutro 70mm²) - Ramal de entrada Cu: XLPE/EPR 90°C fase 95mm² e neutro 50mm² - Aterramento 50mm² (haste 3H) - Eletroduto 2 1/2 pol",
+                        tipo: "CATEGORIA T6 - Trifásico 127/220V (57,1 < D ≤ 81,5kVA)"
                     }
                 }
             },
@@ -1851,7 +1943,7 @@
             document.getElementById('cargaInstaladaGroup').style.display = concessionaria ? 'block' : 'none';
 
             // CEMIG: só permite bifásico ou trifásico
-            if (concessionaria === 'CEMIG' || concessionaria === 'EQUATORIAL_AP_PA_RS') {
+            if (concessionaria === 'CEMIG' || concessionaria === 'EQUATORIAL_AP_PA_RS' || concessionaria === 'ENERGISA_SE') {
                 const tensaoSel = document.getElementById('configTensao');
                 tensaoSel.innerHTML = `
                     <option value="BIFASICO">Bifásico (220/127V)</option>
