@@ -131,6 +131,7 @@
         .coelba { background: linear-gradient(135deg, #16a085 0%, #1abc9c 100%); color: white; border-left-color: #0e8a72; }
         .enel_ce { background: linear-gradient(135deg, #e84393 0%, #c2185b 100%); color: white; border-left-color: #8e0e46; }
         .energisa_se { background: linear-gradient(135deg, #00b894 0%, #00a085 100%); color: white; border-left-color: #008f7a; }
+        .enel_sp { background: linear-gradient(135deg, #e84393 0%, #c2185b 100%); color: white; border-left-color: #8e0e46; }
         .sulgipe { background: linear-gradient(135deg, #2d98da 0%, #0a5a9c 100%); color: white; border-left-color: #084a82; }
 
         .concessionaria-item {
@@ -345,6 +346,7 @@
                         <option value="CEMIG">CEMIG (MG)</option>
                         <option value="COELBA">COELBA (BA)</option>
                         <option value="ENEL_CE">Enel CE</option>
+                        <option value="ENEL_SP">Enel SP (127/220V)</option>
                         <option value="ENERGISA_SE">ENERGISA SE (127/220V)</option>
                         <option value="SULGIPE">SULGIPE (SE)</option>
                     </select>
@@ -420,6 +422,14 @@
             <div class="info" id="cargaNecessariaInfo" style="display: none;">
                 <strong>💡 Informação sobre Carga Instalada:</strong> 
                 <span id="cargaNecessariaText"></span>
+            </div>
+            <!-- Campo opcional (Enel SP): disjuntor de entrada que já existe fisicamente -->
+            <div class="form-group" id="disjuntorEntradaGroup" style="display: none;">
+                <label for="disjuntorEntradaInput">🔌 Disjuntor de Entrada Existente (A) <span style="font-weight:400;color:#888;font-size:0.9em;">(opcional)</span>:</label>
+                <input type="number" id="disjuntorEntradaInput" placeholder="Ex: 70" min="0" step="1">
+                <div class="info" style="margin-top:8px;padding:10px;font-size:0.9em;">
+                    💡 Na Enel SP a categoria depende só do disjuntor. Se o disjuntor existente for <strong>maior</strong> que o exigido pelo solar, a categoria será a menor da tabela com disjuntor <strong>igual ou maior</strong> que ele (ex.: 70A existente → categoria de 80A).
+                </div>
             </div>
             <!-- Mensagem de ajuste automático -->
             <div class="success" id="autoAdjustMessage" style="display: none;">
@@ -677,6 +687,35 @@
                     {min: 40.1, max: 52, classe: "T10", pd: 52},
                     {min: 52.1, max: 66, classe: "T11", pd: 66},
                     {min: 66.1, max: 75, classe: "T12", pd: 75}
+                ]
+            },
+            // ENEL SP (127/220V) - Anexo B: a tabela não tem carga instalada nem demanda (kVA);
+            // a categoria é definida só pelo disjuntor (solar e/ou entrada existente). Por isso
+            // todas as faixas de kW abaixo são "abertas" e não são exibidas para esta concessionária.
+            "ENEL_SP": {
+                "BIFASICO": [
+                    {min: 0, max: 9999, classe: "B3", pd: 9999},
+                    {min: 0, max: 9999, classe: "B4", pd: 9999},
+                    {min: 0, max: 9999, classe: "B5", pd: 9999},
+                    {min: 0, max: 9999, classe: "B6", pd: 9999},
+                    {min: 0, max: 9999, classe: "B7", pd: 9999},
+                    {min: 0, max: 9999, classe: "B8", pd: 9999},
+                    {min: 0, max: 9999, classe: "B9", pd: 9999},
+                    {min: 0, max: 9999, classe: "B10", pd: 9999},
+                    {min: 0, max: 9999, classe: "B11", pd: 9999},
+                    {min: 0, max: 9999, classe: "B12", pd: 9999}
+                ],
+                "TRIFASICO": [
+                    {min: 0, max: 9999, classe: "C3", pd: 9999},
+                    {min: 0, max: 9999, classe: "C4", pd: 9999},
+                    {min: 0, max: 9999, classe: "C5", pd: 9999},
+                    {min: 0, max: 9999, classe: "C6", pd: 9999},
+                    {min: 0, max: 9999, classe: "C7", pd: 9999},
+                    {min: 0, max: 9999, classe: "C8", pd: 9999},
+                    {min: 0, max: 9999, classe: "C9", pd: 9999},
+                    {min: 0, max: 9999, classe: "C10", pd: 9999},
+                    {min: 0, max: 9999, classe: "C11", pd: 9999},
+                    {min: 0, max: 9999, classe: "C12", pd: 9999}
                 ]
             },
             // ENERGISA SE (127/220V) - Tabela 16: Dimensionamento das categorias de atendimento
@@ -1280,6 +1319,168 @@
                     }
                 }
             },
+            "ENEL_SP": {
+                "B3": {
+                    "BIFASICO": {
+                        disjuntor: "50A BIPOLAR CURVA C",
+                        cabo: "10mm² CU",
+                        ramal: "Ramal de conexão 2x10(10)mm² - Ramal de entrada Cu 10mm² - Aterramento Cu 10mm² - Eletroduto do ramal de entrada PVC 32mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Medidor (cabos do ramal de entrada fornecidos e instalados pelo consumidor)",
+                        tipo: "CATEGORIA B3 - Bifásico 127/220V"
+                    }
+                },
+                "B4": {
+                    "BIFASICO": {
+                        disjuntor: "63A BIPOLAR CURVA C",
+                        cabo: "16mm² CU",
+                        ramal: "Ramal de conexão 2x16(16)mm² - Ramal de entrada Cu 16mm² - Aterramento Cu 16mm² - Eletroduto do ramal de entrada PVC 32mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Medidor (cabos do ramal de entrada fornecidos e instalados pelo consumidor)",
+                        tipo: "CATEGORIA B4 - Bifásico 127/220V"
+                    }
+                },
+                "B5": {
+                    "BIFASICO": {
+                        disjuntor: "80A BIPOLAR CURVA C",
+                        cabo: "25mm² CU",
+                        ramal: "Ramal de conexão 2x25(25)mm² - Ramal de entrada Cu 25mm² - Aterramento Cu 16mm² - Eletroduto do ramal de entrada PVC 32mm, aço 25mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA B5 - Bifásico 127/220V"
+                    }
+                },
+                "B6": {
+                    "BIFASICO": {
+                        disjuntor: "100A BIPOLAR CURVA C",
+                        cabo: "35mm² CU",
+                        ramal: "Ramal de conexão 3x35(54,6)mm² - Ramal de entrada Cu 35mm² - Aterramento Cu 16mm² - Eletroduto do ramal de entrada PVC 40mm, aço 50mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA B6 - Bifásico 127/220V"
+                    }
+                },
+                "B7": {
+                    "BIFASICO": {
+                        disjuntor: "125A BIPOLAR CURVA C",
+                        cabo: "50mm² CU",
+                        ramal: "Ramal de conexão 3x35(54,6)mm² - Ramal de entrada Cu 50mm² - Aterramento Cu 25mm² - Eletroduto do ramal de entrada PVC 60mm, aço 50mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA B7 - Bifásico 127/220V"
+                    }
+                },
+                "B8": {
+                    "BIFASICO": {
+                        disjuntor: "160A BIPOLAR CURVA C",
+                        cabo: "70mm² CU",
+                        ramal: "Ramal de conexão 3x50(54,6)mm² - Ramal de entrada Cu 70mm² - Aterramento Cu 35mm² - Eletroduto do ramal de entrada PVC 60mm, aço 50mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA B8 - Bifásico 127/220V"
+                    }
+                },
+                "B9": {
+                    "BIFASICO": {
+                        disjuntor: "200A BIPOLAR CURVA C",
+                        cabo: "95mm² CU",
+                        ramal: "Ramal de conexão 3x95(54,6)mm² - Ramal de entrada Cu 95mm² - Aterramento Cu 50mm² - Eletroduto do ramal de entrada PVC 60mm, aço 50mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA B9 - Bifásico 127/220V"
+                    }
+                },
+                "B10": {
+                    "BIFASICO": {
+                        disjuntor: "225A BIPOLAR CURVA C",
+                        cabo: "120mm² CU",
+                        ramal: "Ramal de conexão 3x95(54,6)mm² - Ramal de entrada Cu 120mm² - Aterramento Cu 70mm² - Eletroduto do ramal de entrada PVC 85mm, aço 70mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA B10 - Bifásico 127/220V"
+                    }
+                },
+                "B11": {
+                    "BIFASICO": {
+                        disjuntor: "275A BIPOLAR CURVA C",
+                        cabo: "150mm² CU",
+                        ramal: "Ramal de conexão 3x150(80)mm² - Ramal de entrada Cu 150mm² - Aterramento Cu 95mm² - Eletroduto do ramal de entrada PVC 85mm, aço 95mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA B11 - Bifásico 127/220V"
+                    }
+                },
+                "B12": {
+                    "BIFASICO": {
+                        disjuntor: "300A BIPOLAR CURVA C",
+                        cabo: "185mm² CU",
+                        ramal: "Ramal de conexão 3x150(80)mm² - Ramal de entrada Cu 185mm² - Aterramento Cu 95mm² - Eletroduto do ramal de entrada PVC 85mm, aço 95mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA B12 - Bifásico 127/220V"
+                    }
+                },
+                "C3": {
+                    "TRIFASICO": {
+                        disjuntor: "50A TRIPOLAR CURVA C",
+                        cabo: "10mm² CU",
+                        ramal: "Ramal de conexão 3x10(10)mm² - Ramal de entrada Cu 10mm² - Aterramento Cu 10mm² - Eletroduto do ramal de entrada PVC 32mm, aço 25mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C3 - Trifásico 127/220V"
+                    }
+                },
+                "C4": {
+                    "TRIFASICO": {
+                        disjuntor: "63A TRIPOLAR CURVA C",
+                        cabo: "16mm² CU",
+                        ramal: "Ramal de conexão 3x16(16)mm² - Ramal de entrada Cu 16mm² - Aterramento Cu 16mm² - Eletroduto do ramal de entrada PVC 32mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C4 - Trifásico 127/220V"
+                    }
+                },
+                "C5": {
+                    "TRIFASICO": {
+                        disjuntor: "80A TRIPOLAR CURVA C",
+                        cabo: "25mm² CU",
+                        ramal: "Ramal de conexão 3x25(25)mm² - Ramal de entrada Cu 25mm² - Aterramento Cu 16mm² - Eletroduto do ramal de entrada PVC 32mm, aço 25mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C5 - Trifásico 127/220V"
+                    }
+                },
+                "C6": {
+                    "TRIFASICO": {
+                        disjuntor: "100A TRIPOLAR CURVA C",
+                        cabo: "35mm² CU",
+                        ramal: "Ramal de conexão 3x35(54,6)mm² - Ramal de entrada Cu 35mm² - Aterramento Cu 16mm² - Eletroduto do ramal de entrada PVC 40mm, aço 50mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C6 - Trifásico 127/220V"
+                    }
+                },
+                "C7": {
+                    "TRIFASICO": {
+                        disjuntor: "125A TRIPOLAR CURVA C",
+                        cabo: "50mm² CU",
+                        ramal: "Ramal de conexão 3x35(54,6)mm² - Ramal de entrada Cu 50mm² - Aterramento Cu 25mm² - Eletroduto do ramal de entrada PVC 60mm, aço 50mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C7 - Trifásico 127/220V"
+                    }
+                },
+                "C8": {
+                    "TRIFASICO": {
+                        disjuntor: "160A TRIPOLAR CURVA C",
+                        cabo: "70mm² CU",
+                        ramal: "Ramal de conexão 3x50(54,6)mm² - Ramal de entrada Cu 70mm² - Aterramento Cu 35mm² - Eletroduto do ramal de entrada PVC 60mm, aço 50mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C8 - Trifásico 127/220V"
+                    }
+                },
+                "C9": {
+                    "TRIFASICO": {
+                        disjuntor: "200A TRIPOLAR CURVA C",
+                        cabo: "95mm² CU",
+                        ramal: "Ramal de conexão 3x95(54,6)mm² - Ramal de entrada Cu 95mm² - Aterramento Cu 50mm² - Eletroduto do ramal de entrada PVC 60mm, aço 50mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C9 - Trifásico 127/220V"
+                    }
+                },
+                "C10": {
+                    "TRIFASICO": {
+                        disjuntor: "225A TRIPOLAR CURVA C",
+                        cabo: "120mm² CU",
+                        ramal: "Ramal de conexão 3x95(54,6)mm² - Ramal de entrada Cu 120mm² - Aterramento Cu 70mm² - Eletroduto do ramal de entrada PVC 85mm, aço 70mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C10 - Trifásico 127/220V"
+                    }
+                },
+                "C11": {
+                    "TRIFASICO": {
+                        disjuntor: "275A TRIPOLAR CURVA C",
+                        cabo: "150mm² CU",
+                        ramal: "Ramal de conexão 3x150(80)mm² - Ramal de entrada Cu 150mm² - Aterramento Cu 95mm² - Eletroduto do ramal de entrada PVC 85mm, aço 95mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C11 - Trifásico 127/220V"
+                    }
+                },
+                "C12": {
+                    "TRIFASICO": {
+                        disjuntor: "300A TRIPOLAR CURVA C",
+                        cabo: "185mm² CU",
+                        ramal: "Ramal de conexão 3x150(80)mm² - Ramal de entrada Cu 185mm² - Aterramento Cu 95mm² - Eletroduto do ramal de entrada PVC 85mm, aço 95mm - Eletroduto de aterramento PVC 32mm / aço 25mm - Ponto de conexão: Poste (ramal de entrada e eletroduto instalados pelo consumidor)",
+                        tipo: "CATEGORIA C12 - Trifásico 127/220V"
+                    }
+                }
+            },
             "ENERGISA_SE": {
                 "B1": {
                     "BIFASICO": {
@@ -1665,7 +1866,7 @@
         }
 
         // Função para ajustar a classe baseada na corrente
-        function ajustarClassePorCorrente(concessionaria, configTensao, classeInicial, correnteTotal) {
+        function ajustarClassePorCorrente(concessionaria, configTensao, classeInicial, correnteTotal, disjuntorMinimo = 0) {
             const faixas = classesDemanda[concessionaria][configTensao];
             if (!faixas) return classeInicial;
 
@@ -1687,8 +1888,11 @@
             // Comparar direto pela corrente crua deixaria passar casos onde
             // a corrente cabe no limite da classe (ex: 39,5A <= 40A) mas o
             // disjuntor comercial arredondado (50A) já não cabe mais.
-            const disjuntorSolar = calcularDisjuntor(correnteTotal);
-            if (typeof disjuntorSolar !== 'number') return null;
+            const disjuntorSolarCalculado = calcularDisjuntor(correnteTotal);
+            if (typeof disjuntorSolarCalculado !== 'number') return null;
+            // disjuntorMinimo: disjuntor de entrada já existente (Enel SP). Se for
+            // maior que o solar, ele manda: a classe é a menor com disjuntor >= a ele.
+            const disjuntorSolar = Math.max(disjuntorSolarCalculado, disjuntorMinimo);
 
             // Verificar se o disjuntor solar excede o disjuntor da classe atual
             const classeAtual = dimensionamento[concessionaria][classeInicial][configTensao];
@@ -1940,10 +2144,12 @@
             configTensaoGroup.style.display = concessionaria ? 'block' : 'none';
             configOrlaGroup.style.display = (concessionaria === 'EQUATORIAL' || concessionaria === 'EQUATORIAL_AP_PA_RS') ? 'block' : 'none';
             document.getElementById('configRedeCoelbaGroup').style.display = concessionaria === 'COELBA' ? 'block' : 'none';
-            document.getElementById('cargaInstaladaGroup').style.display = concessionaria ? 'block' : 'none';
+            document.getElementById('cargaInstaladaGroup').style.display = (concessionaria && concessionaria !== 'ENEL_SP') ? 'block' : 'none';
+            document.getElementById('disjuntorEntradaGroup').style.display = concessionaria === 'ENEL_SP' ? 'block' : 'none';
+            if (concessionaria !== 'ENEL_SP') document.getElementById('disjuntorEntradaInput').value = '';
 
             // CEMIG: só permite bifásico ou trifásico
-            if (concessionaria === 'CEMIG' || concessionaria === 'EQUATORIAL_AP_PA_RS' || concessionaria === 'ENERGISA_SE') {
+            if (concessionaria === 'CEMIG' || concessionaria === 'EQUATORIAL_AP_PA_RS' || concessionaria === 'ENERGISA_SE' || concessionaria === 'ENEL_SP') {
                 const tensaoSel = document.getElementById('configTensao');
                 tensaoSel.innerHTML = `
                     <option value="BIFASICO">Bifásico (220/127V)</option>
@@ -2034,6 +2240,12 @@
                 
                 addInversor(inversor);
                 inversorSelect.value = '';
+                calculateDimensionamento();
+            }
+        });
+
+        document.getElementById('disjuntorEntradaInput').addEventListener('input', function() {
+            if (selectedInversors.length > 0) {
                 calculateDimensionamento();
             }
         });
@@ -2148,7 +2360,10 @@
             const concessionaria = concessionariaSelect.value;
             const config = configTensao.value;
             const configOrlaValue = configOrla.value;
-            const cargaInstaladaVal = parseFloat(document.getElementById('cargaInstaladaInput').value) || 0;
+            // Enel SP: tabela sem carga instalada/demanda — a categoria sai só do disjuntor.
+            const semFaixaKw = concessionaria === 'ENEL_SP';
+            const cargaInstaladaVal = semFaixaKw ? 0 : (parseFloat(document.getElementById('cargaInstaladaInput').value) || 0);
+            const disjuntorEntradaFisico = semFaixaKw ? (parseFloat(document.getElementById('disjuntorEntradaInput').value) || 0) : 0;
 
             atualizarPainelMicros();
 
@@ -2208,7 +2423,7 @@
 
             // Ajustar classe baseada na corrente, se necessário
             if (classe) {
-                const classeAjustada = ajustarClassePorCorrente(concessionaria, config, classe, correnteTotal);
+                const classeAjustada = ajustarClassePorCorrente(concessionaria, config, classe, correnteTotal, disjuntorEntradaFisico);
                 if (classeAjustada === null) {
                     // Nenhuma classe desta configuração (mono/bi/tri) tem disjuntor
                     // suficiente para a corrente total — não dá pra "forçar" uma
@@ -2222,7 +2437,13 @@
             }
 
             const semClasseAvisoDiv = document.getElementById('semClasseAviso');
-            if (semClasseAdequada) {
+            if (semClasseAdequada && semFaixaKw) {
+                const solarNec = calcularDisjuntor(correnteTotal);
+                const faixasEnel = classesDemanda[concessionaria][config];
+                const maiorEnel = dimensionamento[concessionaria][faixasEnel[faixasEnel.length - 1].classe][config].disjuntor;
+                semClasseAvisoDiv.innerHTML = `❌ Nenhuma categoria da tabela atende: disjuntor solar necessário <strong>${typeof solarNec === 'number' ? solarNec + 'A' : 'acima de 125A'}</strong>${disjuntorEntradaFisico > 0 ? ` e disjuntor de entrada existente <strong>${disjuntorEntradaFisico}A</strong>` : ''}. O maior disjuntor de padrão para <strong>${nomeConfigAmigavel(config)}</strong> é <strong>${maiorEnel}</strong>.`;
+                semClasseAvisoDiv.style.display = 'block';
+            } else if (semClasseAdequada) {
                 const faixasConfig = classesDemanda[concessionaria][config];
                 const ultimaFaixa = faixasConfig[faixasConfig.length - 1];
                 const ultimaClasseInfo = dimensionamento[concessionaria][ultimaFaixa.classe][config];
@@ -2368,8 +2589,8 @@
                 concessionariaInfoDiv.style.display = 'none';
             }
 
-            // Exibir informações de demanda
-            if (classe) {
+            // Exibir informações de demanda (Enel SP não tem faixa de kW/PD na tabela)
+            if (classe && !semFaixaKw) {
                 const faixas = classesDemanda[concessionaria][config];
                 if (faixas) {
                     const faixa = faixas.find(f => f.classe === classe);
@@ -2420,7 +2641,15 @@
             }
 
             // Exibir mensagem de ajuste automático, se aplicável
-            if (ajusteRealizado) {
+            if (semFaixaKw && classe) {
+                const solarNec = calcularDisjuntor(correnteTotal);
+                const dispTab = dimensionamento[concessionaria][classe][config].disjuntor;
+                autoAdjustMessage.style.display = 'block';
+                document.getElementById('adjustmentDetails').innerHTML =
+                    `Categoria definida pelo disjuntor: solar necessário <strong>${solarNec}A</strong>` +
+                    (disjuntorEntradaFisico > 0 ? `, entrada existente <strong>${disjuntorEntradaFisico}A</strong>` : '') +
+                    ` → categoria <strong>${classe}</strong> (<strong>${dispTab}</strong>).`;
+            } else if (ajusteRealizado) {
                 autoAdjustMessage.style.display = 'block';
                 document.getElementById('adjustmentDetails').innerHTML = 
                     `A classe foi ajustada de <strong>${classeOriginal}</strong> para <strong>${classe}</strong> 
